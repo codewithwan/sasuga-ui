@@ -19,9 +19,10 @@ export const site = {
   create: `npx degit ${brand.repo}/template my-app`,
   github: brand.github,
   author: brand.author,
-  /** The runtime dependencies the copy-paste route needs. */
-  deps: 'npm i class-variance-authority clsx tailwind-merge',
 }
+
+/** An app path with the deploy base in front, for plain <a href> (router links add it themselves). */
+export const withBase = (path: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${path}`
 
 /** Document title for a page: "Theming — <brand name>". */
 export const pageTitle = (page?: string) => (page ? `${page} — ${site.name}` : `${site.name} — ${brand.tagline}`)

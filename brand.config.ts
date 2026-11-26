@@ -21,6 +21,8 @@ export const brand = {
   repo: 'codewithwan/sukasuki-ui',
   /** One-line pitch, used in <meta name="description"> and the home title. */
   tagline: 'Game-feel UI components for React',
+  /** Live docs site. */
+  docs: 'https://codewithwan.github.io/sukasuki-ui/',
   /** Repository link. */
   github: 'https://github.com/codewithwan/sukasuki-ui',
   /** Author handle, credited in the footer. */

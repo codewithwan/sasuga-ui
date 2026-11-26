@@ -1,13 +1,13 @@
-import { FONTS_LINK } from '@/data/site'
-import { CodeBlock } from '../CodeBlock'
+import { FONTS_LINK, withBase } from '@/data/site'
+import { agentPromptKit } from '@/docs/sources'
+import { CodeBlock, CopyButton } from '../CodeBlock'
 import { InstallSnippet } from '../InstallSnippet'
+import { PM, usePackageManager } from '../package-manager'
 import { C, Guide, P, Section, Step } from './Guide'
 
 const DEPS = 'class-variance-authority clsx tailwind-merge'
 
-const TAILWIND = `npm i -D tailwindcss @tailwindcss/vite
-
-// vite.config.ts
+const VITE = `// vite.config.ts
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
@@ -48,6 +48,12 @@ export default function App() {
   )
 }`
 
+/** "cd, install, run" in whichever package manager is picked above. */
+function RunSteps() {
+  const pm = usePackageManager()
+  return <CodeBlock code={`cd my-app\n${PM.install(pm)}\n${PM.run(pm, 'dev')}`} />
+}
+
 export function Installation() {
   return (
     <Guide
@@ -65,11 +71,26 @@ export function Installation() {
           folder. Then install and run it.
         </P>
         <InstallSnippet mode="create" />
-        <CodeBlock code={'cd my-app\nnpm install\nnpm run dev'} />
+        <RunSteps />
         <P>
           Prefer clicking? Open the repository on GitHub and press <C>Use this template</C>, or download the ZIP and keep the{' '}
           <C>template</C> folder.
         </P>
+      </Section>
+
+      <Section id="agent" title="With an AI agent">
+        <P>
+          Using Claude Code, Cursor, Copilot or another coding agent? Give it this prompt. For a single component, every component page has a{' '}
+          <C>Copy prompt for your agent</C> button with the exact files. Agents can also read{' '}
+          <a href={withBase('/llms.txt')} className="font-bold text-accent">
+            llms.txt
+          </a>
+          , a plain-text map of the whole kit.
+        </P>
+        <div>
+          <CopyButton text={agentPromptKit()} label="Copy prompt" />
+        </div>
+        <CodeBlock code={agentPromptKit()} title="prompt.txt" lang="text" lineNumbers={false} />
       </Section>
 
       <Section id="manual" title="Existing app: copy the files">
@@ -86,7 +107,8 @@ export function Installation() {
           <P>
             Components import from <C>@/lib/utils</C> and <C>@/fx</C>. Point <C>@</C> at <C>src</C> in Vite and in TypeScript.
           </P>
-          <CodeBlock code={TAILWIND} />
+          <InstallSnippet packages="tailwindcss @tailwindcss/vite" dev />
+          <CodeBlock code={VITE} />
           <CodeBlock code={TSCONFIG} />
         </Step>
 

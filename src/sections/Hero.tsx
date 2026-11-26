@@ -5,7 +5,7 @@ import { Reveal } from '@/components/ui/reveal'
 import { TextRotate } from '@/components/ui/text-rotate'
 import { WipeLink } from '@/components/site/WipeLink'
 import { useWipeClick } from '@/components/site/wipe-context'
-import { site } from '@/data/site'
+import { site, withBase } from '@/data/site'
 import { InstallSnippet } from '@/pages/docs/InstallSnippet'
 
 const USES = ['games', 'shops', 'dashboards', 'chat apps', 'learning apps']
@@ -50,10 +50,10 @@ export function Hero({ ready }: { ready: boolean }) {
         </Reveal>
 
         <Reveal show={ready} from="up" delay={550} className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <ButtonLink href="/docs" variant="accent" sfx="ドン!" onClick={go('/docs', 'Get started')}>
+          <ButtonLink href={withBase('/docs')} variant="accent" sfx="ドン!" onClick={go('/docs', 'Get started')}>
             Get started
           </ButtonLink>
-          <ButtonLink href="/components" variant="paper" sfx="バン!" onClick={go('/components', 'Components')}>
+          <ButtonLink href={withBase('/components')} variant="paper" sfx="バン!" onClick={go('/components', 'Components')}>
             Browse components
           </ButtonLink>
         </Reveal>

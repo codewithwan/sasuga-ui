@@ -1,48 +1,11 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { KeyboardEvent } from 'react'
 import { prefersReducedMotion, uiStyle } from '@/fx'
 import { cn } from '@/lib/utils'
 import { CODE_SURFACE, CODE_VARS, TOKEN_CLASS, useScrollEdges } from './code-kit'
 import { CODE_TEXT, CopyButton, FadeEdges } from './CodeBlock'
 import { site } from '@/data/site'
-
-const MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const
-type Manager = (typeof MANAGERS)[number]
-
-const VERB: Record<Manager, string> = { npm: 'i', pnpm: 'add', yarn: 'add', bun: 'add' }
-/** How each manager runs a one-off package (used to scaffold from the template). */
-const RUN: Record<Manager, string> = { npm: 'npx', pnpm: 'pnpm dlx', yarn: 'yarn dlx', bun: 'bunx' }
-const DEV: Record<Manager, string> = { npm: '-D', pnpm: '-D', yarn: '-D', bun: '-d' }
-
-/* The choice is shared by every snippet on the page and remembered across visits. */
-const KEY = 'ui-kit:package-manager'
-const EVENT = 'ui-kit:package-manager'
-
-const isManager = (v: unknown): v is Manager => MANAGERS.includes(v as Manager)
-function readManager(): Manager {
-  try {
-    const v = localStorage.getItem(KEY)
-    return isManager(v) ? v : 'npm'
-  } catch {
-    return 'npm'
-  }
-}
-function writeManager(m: Manager) {
-  try {
-    localStorage.setItem(KEY, m)
-  } catch {
-    /* private mode: keep it for this page only */
-  }
-  window.dispatchEvent(new Event(EVENT))
-}
-function subscribe(cb: () => void) {
-  window.addEventListener('storage', cb)
-  window.addEventListener(EVENT, cb)
-  return () => {
-    window.removeEventListener('storage', cb)
-    window.removeEventListener(EVENT, cb)
-  }
-}
+import { DEV, MANAGERS, RUN, VERB, readManager, usePackageManager, writeManager } from './package-manager'
 
 const POP = 'cubic-bezier(.2,1.5,.4,1)'
 
@@ -63,7 +26,7 @@ export type InstallSnippetProps = {
  * by every snippet on the page.
  */
 export function InstallSnippet({ packages = site.package, dev = false, mode = 'install', className }: InstallSnippetProps) {
-  const manager = useSyncExternalStore(subscribe, readManager, () => 'npm' as const)
+  const manager = usePackageManager()
   const segs =
     mode === 'create'
       ? [RUN[manager], 'degit', `${site.repo}/template my-app`]

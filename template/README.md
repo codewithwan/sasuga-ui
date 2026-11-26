@@ -23,6 +23,6 @@ src/data/site.ts      your app name for the logo stickers
 Switch the look with attributes on `<html>` (or `useTheme()`):
 `data-style="cel | manga | flat"`, `data-theme="lilac | mint | peach | sky"`, `data-mode="light | dark"`.
 
-Docs and live examples: https://github.com/codewithwan/sukasuki-ui
+Docs and live examples: https://codewithwan.github.io/sukasuki-ui/ · source: https://github.com/codewithwan/sukasuki-ui
 
 MIT licensed · made by [codewithwan](https://github.com/codewithwan)

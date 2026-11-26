@@ -3,7 +3,10 @@ import { Tabs } from '@/components/ui/tabs'
 import { docs, findDoc } from '@/docs/registry'
 import { NotFound } from '../NotFound'
 import { useTitle } from '../use-title'
-import { CodeBlock, PreviewPanel } from './CodeBlock'
+import { CodeBlock, CopyButton, PreviewPanel } from './CodeBlock'
+import { AddComponent } from './AddComponent'
+import { agentPrompt } from '@/docs/sources'
+import { useSources } from '@/docs/use-sources'
 import { Icon } from '@/components/ui/icon'
 
 export function DocPage() {
@@ -11,6 +14,7 @@ export function DocPage() {
   const doc = findDoc(slug)
 
   useTitle(doc ? doc.name : 'Not found')
+  const files = useSources(slug ?? '')
 
   if (!doc) return <NotFound embedded />
 
@@ -33,6 +37,22 @@ export function DocPage() {
           <span className="ui-pill bg-accent-soft/60 px-3 py-1 font-jp text-lg leading-tight text-ink">{doc.jp}</span>
         </div>
         <p className="m-0 max-w-[62ch] text-lg leading-relaxed text-mute">{doc.description}</p>
+        {files && files.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <CopyButton
+              label="Copy prompt for your agent"
+              text={agentPrompt(
+                doc.name,
+                doc.slug,
+                files.map((f) => f.path),
+                doc.usage,
+              )}
+            />
+            <a href="#add" className="ui-head text-[13px] text-accent no-underline hover:underline focus-visible:ui-focus">
+              or copy the code
+            </a>
+          </div>
+        )}
       </header>
 
       <Tabs
@@ -48,6 +68,13 @@ export function DocPage() {
           Usage
         </h2>
         <CodeBlock code={doc.usage} />
+      </section>
+
+      <section aria-labelledby="add" className="grid gap-4">
+        <h2 id="add" className="ui-head m-0 scroll-mt-28 text-3xl leading-none text-ink">
+          Add it to your project
+        </h2>
+        <AddComponent slug={doc.slug} name={doc.name} usage={doc.usage} files={files} />
       </section>
 
       {doc.examples?.length ? (

@@ -4,6 +4,8 @@
 
 # Sukasuki UI
 
+**Docs & live demos: https://codewithwan.github.io/sukasuki-ui/**
+
 Game-feel UI components for React. Calm, sticker-like controls at rest — then they squash,
 overshoot and burst with hand-drawn impact effects and sound-effect lettering when you touch them.
 Made for web games, launchers and anime-flavoured sites, and for any app that should feel alive.
@@ -40,7 +42,13 @@ Or press **Use this template** on GitHub, or download the ZIP and keep the `temp
 3. Copy the core: `src/index.css`, `src/lib/utils.ts`, `src/lib/theme.ts`, `src/fx/`.
 4. Copy the components you want from `src/components/ui/` (and `src/components/art/` for the mascot and stickers).
 
-The full guide is on the docs site under **Docs → Installation**.
+Every component page has the full source (copy or download) and lists the kit files it needs.
+The full guide: [Docs → Installation](https://codewithwan.github.io/sukasuki-ui/docs/installation).
+
+### With an AI agent
+
+Every component page has a **Copy prompt for your agent** button with the exact files and raw links.
+Agents can also read [`llms.txt`](https://codewithwan.github.io/sukasuki-ui/llms.txt), a plain-text map of the whole kit.
 
 ## Theming
 

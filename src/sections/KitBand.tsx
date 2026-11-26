@@ -1,6 +1,7 @@
 import { ButtonLink } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
 import { useWipeClick } from '@/components/site/wipe-context'
+import { withBase } from '@/data/site'
 import { docs } from '@/docs/registry'
 import { STYLES, THEMES } from '@/lib/theme'
 
@@ -28,7 +29,7 @@ export function KitBand() {
           ))}
         </dl>
         <ButtonLink
-          href="/components"
+          href={withBase('/components')}
           variant="accent"
           sfx="ドン!"
           iconEnd={<Icon name="arrow-right" tone="line" size={18} />}
