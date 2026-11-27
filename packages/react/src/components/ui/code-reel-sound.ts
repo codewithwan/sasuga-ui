@@ -1,15 +1,16 @@
 /**
- * Sample playback for CodeReel: key clicks, an accept pop, diagnostic cues and terminal ticks,
- * from audio files you provide (`sounds` prop). Files are fetched and decoded once, then played
+ * Sample playback for CodeReel: keystrokes, the Enter key, and optional cues for autocomplete,
+ * diagnostics and terminal logs, from audio files you provide (`sounds` prop). Files are fetched and decoded once, then played
  * through the Web Audio API so rapid key clicks overlap cleanly. Browsers only start audio after
  * a user gesture, so sounds stay silent until the page has been clicked or tapped once.
  *
- * The docs use Kenney's "Interface Sounds" (CC0, kenney.nl/assets/interface-sounds).
+ * The docs use real mechanical keyboard recordings, all CC0: single keys on a Cherry KC 1000 from
+ * "Keyboard Soundpack 1" by unicaegames (OpenGameArt) and an Enter key by alpinemesh (Freesound).
  */
 
-export type ReelSound = 'key' | 'accept' | 'error' | 'warn' | 'ok' | 'info' | 'tick'
+export type ReelSound = 'key' | 'enter' | 'accept' | 'error' | 'warn' | 'ok' | 'info' | 'tick'
 
-/** A URL per event. `key` can list several files; one is picked at random per keystroke. `info` falls back to `tick`. */
+/** A URL per event. `key` can list several files (one is picked at random per keystroke). `enter` plays when a new line starts; `accept` falls back to `enter`, `info` to `tick`. Events without a file stay silent. */
 export type CodeReelSounds = Partial<Record<Exclude<ReelSound, 'key'>, string>> & { key?: string | string[] }
 
 let ctx: AudioContext | null = null
@@ -55,7 +56,7 @@ let lastKey = 0
 export function playReelSound(kind: ReelSound, volume: number, set: CodeReelSounds) {
   const c = audio()
   if (!c || c.state !== 'running' || volume <= 0) return
-  const pick = kind === 'key' ? set.key : kind === 'info' ? (set.info ?? set.tick) : set[kind]
+  const pick = kind === 'key' ? set.key : kind === 'info' ? (set.info ?? set.tick) : kind === 'accept' ? (set.accept ?? set.enter) : set[kind]
   const list = Array.isArray(pick) ? pick : pick ? [pick] : []
   if (!list.length) return
   const url = list[Math.floor(Math.random() * list.length)]
@@ -68,9 +69,10 @@ export function playReelSound(kind: ReelSound, volume: number, set: CodeReelSoun
   }
   const src = c.createBufferSource()
   src.buffer = buffer
-  if (kind === 'key') src.playbackRate.value = 0.92 + Math.random() * 0.16
+  // real keys barely vary: a few percent of pitch keeps repeats from sounding identical
+  if (kind === 'key') src.playbackRate.value = 0.96 + Math.random() * 0.08
   const g = c.createGain()
-  g.gain.value = volume * (kind === 'key' ? 0.55 : 0.8)
+  g.gain.value = volume * (kind === 'key' ? 0.7 : 0.8)
   src.connect(g).connect(c.destination)
   src.start(now)
 }

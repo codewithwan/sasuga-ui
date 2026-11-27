@@ -29,14 +29,11 @@ const LOGS: CodeReelLog[] = [
   { tone: 'ok', text: 'stage cleared in 3 tries' },
 ]
 
-/** Kenney "Interface Sounds" (CC0), trimmed to WAV in public/assets/sfx. */
+/** Real mechanical keyboard recordings (CC0), trimmed in public/assets/sfx/keys: Cherry KC 1000 keys by
+ *  unicaegames (OpenGameArt "Keyboard Soundpack 1") and an Enter key by alpinemesh (Freesound). */
 const SFX: CodeReelSounds = {
-  key: ['key-1', 'key-2', 'key-3', 'key-4'].map((n) => withBase(`/assets/sfx/${n}.wav`)),
-  accept: withBase('/assets/sfx/accept.wav'),
-  ok: withBase('/assets/sfx/ok.wav'),
-  error: withBase('/assets/sfx/error.wav'),
-  warn: withBase('/assets/sfx/warn.wav'),
-  tick: withBase('/assets/sfx/tick.wav'),
+  key: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => withBase(`/assets/sfx/keys/key-${n}.wav`)),
+  enter: withBase('/assets/sfx/keys/enter.wav'),
 }
 
 const SKIN_ITEMS = [
@@ -181,7 +178,7 @@ function SyncedDemo() {
         <a href="https://freemusicarchive.org/music/holiznacc0/winter-lofi" target="_blank" rel="noreferrer" className="font-bold text-accent">
           HoliznaCC0
         </a>{' '}
-        (CC0). Sounds: Kenney Interface Sounds (CC0). Each line starts on a bar.
+        (CC0). Keys: real Cherry KC 1000 recordings (CC0). Each line starts on a bar.
       </p>
       <audio
         ref={audio}
@@ -269,7 +266,7 @@ export default {
   jp: 'コードリール',
   category: 'Motion',
   description:
-    'Code as kinetic typography, for intros, shorts and lyric videos. Lines of code type themselves into an editor while a 3D camera rides the cursor: the screen tilts in perspective, the active line sits on a band with a faint reflection, and the lines around it fall out of focus. A word can stop on an autocomplete menu before it is accepted, a finished line can raise a wavy underline and an inline diagnostic, and a terminal prints its logs at the end while the camera pulls back to the whole file. Four skins (neon, paper that follows your theme, phosphor CRT, manga ink), three frames, and optional key-click and cue sounds from your own files. It is all a function of time, so it scrubs, loops and follows a song or a video through time. Reduced motion shows each line whole, with a still camera.',
+    'Code as kinetic typography, for intros, shorts and lyric videos. Lines of code type themselves into an editor while a 3D camera rides the cursor: the screen tilts in perspective, the active line sits on a band with a faint reflection, and the lines around it fall out of focus. A word can stop on an autocomplete menu before it is accepted, a finished line can raise a wavy underline and an inline diagnostic, and a terminal prints its logs at the end while the camera pulls back to the whole file. Four skins (neon, paper that follows your theme, phosphor CRT, manga ink), three frames, and optional keyboard and cue sounds from your own recordings. It is all a function of time, so it scrubs, loops and follows a song or a video through time. Reduced motion shows each line whole, with a still camera.',
   preview: <ReelDemo />,
   usage: `import { CodeReel } from '@/components/ui/code-reel'
 
@@ -286,10 +283,8 @@ export default {
   terminal={[{ tone: 'ok', text: 'stage cleared in 3 tries' }]}
   sound
   sounds={{
-    key: ['/sfx/key-1.wav', '/sfx/key-2.wav'],
-    accept: '/sfx/accept.wav',
-    error: '/sfx/error.wav',
-    ok: '/sfx/ok.wav',
+    key: ['/sfx/keys/key-1.wav', '/sfx/keys/key-2.wav', '/sfx/keys/key-3.wav'],
+    enter: '/sfx/keys/enter.wav',
   }}
   controls
 />`,
@@ -354,7 +349,7 @@ const lines = [
     { name: 'zoom / depth', type: 'number', default: '1 / 0.6', description: 'How close the follow camera sits, and how much lines away from the cursor blur and dim (0..1).' },
     { name: 'glow / texture', type: 'boolean', description: 'Text glow (default on for neon and phosphor) and the screen texture (LCD grid, scanlines or screentone).' },
     { name: 'sound', type: 'boolean | number', default: 'false', description: 'Play the sounds: true = 0.5 or a volume 0..1. Browsers start audio after the first click on the page.' },
-    { name: 'sounds', type: '{ key?: string | string[]; accept?; error?; warn?; ok?; info?; tick? }', description: 'Audio file per event (several key files are picked at random and slightly detuned). Without them the reel is silent. The docs use Kenney Interface Sounds (CC0).' },
+    { name: 'sounds', type: '{ key?: string | string[]; enter?; accept?; error?; warn?; ok?; info?; tick? }', description: 'Audio file per event: several key files are picked at random and barely detuned, enter plays on each new line and on an accepted autocomplete. Events without a file stay silent. The docs use real mechanical keyboard recordings (CC0).' },
     { name: 'className', type: 'string', description: 'Sizes the screen (default aspect-video, full width). aspect-[9/16] for a vertical reel.' },
     { name: 'label', type: 'string', description: 'Accessible name; defaults to the code itself.' },
   ],

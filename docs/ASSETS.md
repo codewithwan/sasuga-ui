@@ -111,7 +111,7 @@ Output: a PNG with a real transparent background (alpha channel).
 | File (in `apps/docs/public/assets/`) | Source | License | Used in |
 |---|---|---|---|
 | `music/holizna-snow-drift.mp3` | "Snow Drift" by HoliznaCC0, album *Winter Lofi* ([Free Music Archive](https://freemusicarchive.org/music/holiznacc0/winter-lofi)). First 12 bars (36 s) with a fade-out, 128 kbps. 84.85 BPM, first downbeat at 0.685 s | CC0 1.0 | Code Reel "Synced to a real song" |
-| `sfx/key-1..4.wav` | Kenney Interface Sounds: `tick_004`, `click_003`, `click_005`, `select_001` | CC0 1.0 | Code Reel key clicks (one picked at random, slightly detuned) |
-| `sfx/accept.wav`, `ok.wav`, `error.wav`, `warn.wav`, `tick.wav` | Kenney Interface Sounds: `toggle_002`, `confirmation_004`, `error_004`, `question_002`, `pluck_001` ([kenney.nl](https://kenney.nl/assets/interface-sounds)) | CC0 1.0 | Code Reel autocomplete accept, diagnostics, terminal logs |
+| `sfx/keys/key-1..8.wav` | Real single keystrokes on a Cherry KC 1000 (Shure SM7B), "Keyboard Soundpack 1" by unicaegames ([OpenGameArt](https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes)), files `keypress-001..008`, fetched from the byte-identical copies in [clatterbox](https://github.com/zordhalo/clatterbox/tree/main/src-tauri/resources/packs/classic) | CC0 1.0 | Code Reel keystrokes (one picked at random, pitch varied by up to 4%) |
+| `sfx/keys/enter.wav` | Enter key on a Corsair K70 RGB by alpinemesh ([Freesound 627647](https://freesound.org/people/alpinemesh/sounds/627647/)), via clatterbox | CC0 1.0 | Code Reel new line and accepted autocomplete |
 
-SFX are mono 32 kHz WAV (no MP3 start padding, so clicks land on time; Safari has no reliable Ogg support). Credit is not required by CC0 but is given in the demo caption.
+Keystrokes are trimmed to start 3 ms before the click (the originals carried 5 to 55 ms of silence), faded in over 1 ms and peak-matched at 0.7, mono 44.1 kHz WAV (no MP3 start padding, so keys land on time). Credit is not required by CC0 but is given in the demo caption.

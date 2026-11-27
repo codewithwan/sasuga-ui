@@ -64,7 +64,7 @@ export type CodeReelProps = {
   texture?: boolean
   /** Play `sounds`: true = 0.5, or a volume 0..1. Starts after the first click on the page. */
   sound?: boolean | number
-  /** Audio files per event: key clicks (one or several), accept, error, warn, ok, info, tick. Without them the reel stays silent. */
+  /** Audio files per event: key (one or several), enter (new line; also used for accept), accept, error, warn, ok, info, tick. Events without a file stay silent. */
   sounds?: CodeReelSounds
   /** Accessible name. Defaults to the code itself. */
   label?: string
@@ -439,6 +439,7 @@ export function CodeReel({
     if (volume) {
       const sameLine = active === h.active
       const step = typedActive - h.typed
+      if (active === h.active + 1 && h.active >= 0) playReelSound('enter', volume, set)
       if (sameLine && h.menu && !menuOpen && step > 0) playReelSound('accept', volume, set)
       else if (sameLine && step > 0 && step <= 3) playReelSound('key', volume, set)
       if (next.diags === h.diags + 1) playReelSound(diagsShown[diagsShown.length - 1]?.diagnostic?.tone ?? 'error', volume, set)
