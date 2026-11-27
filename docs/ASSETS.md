@@ -103,3 +103,15 @@ Row 2: 3) a five-point star in lilac built from bold motion: three short ink spe
 
 Output: a PNG with a real transparent background (alpha channel).
 ```
+
+---
+
+## Audio (CC0, not generated)
+
+| File (in `apps/docs/public/assets/`) | Source | License | Used in |
+|---|---|---|---|
+| `music/holizna-snow-drift.mp3` | "Snow Drift" by HoliznaCC0, album *Winter Lofi* ([Free Music Archive](https://freemusicarchive.org/music/holiznacc0/winter-lofi)). First 12 bars (36 s) with a fade-out, 128 kbps. 84.85 BPM, first downbeat at 0.685 s | CC0 1.0 | Code Reel "Synced to a real song" |
+| `sfx/key-1..4.wav` | Kenney Interface Sounds: `tick_004`, `click_003`, `click_005`, `select_001` | CC0 1.0 | Code Reel key clicks (one picked at random, slightly detuned) |
+| `sfx/accept.wav`, `ok.wav`, `error.wav`, `warn.wav`, `tick.wav` | Kenney Interface Sounds: `toggle_002`, `confirmation_004`, `error_004`, `question_002`, `pluck_001` ([kenney.nl](https://kenney.nl/assets/interface-sounds)) | CC0 1.0 | Code Reel autocomplete accept, diagnostics, terminal logs |
+
+SFX are mono 32 kHz WAV (no MP3 start padding, so clicks land on time; Safari has no reliable Ogg support). Credit is not required by CC0 but is given in the demo caption.

@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { prefersReducedMotion } from '@/fx'
 import { cn } from '@/lib/utils'
-import { playReelSound, unlockReelSound } from './code-reel-sound'
+import { playReelSound, preloadReelSounds, unlockReelSound } from './code-reel-sound'
+import type { CodeReelSounds } from './code-reel-sound'
+
+export type { CodeReelSounds } from './code-reel-sound'
 import { Icon } from './icon'
 import { TimelineScrubber, useTimeline } from './timeline'
 
@@ -59,8 +62,10 @@ export type CodeReelProps = {
   glow?: boolean
   /** The screen texture (LCD grid, scanlines or screentone, by skin). */
   texture?: boolean
-  /** Synthesized key clicks, accept pops and diagnostic blips. true = 0.5, or a volume 0..1. Starts after the first click on the page. */
+  /** Play `sounds`: true = 0.5, or a volume 0..1. Starts after the first click on the page. */
   sound?: boolean | number
+  /** Audio files per event: key clicks (one or several), accept, error, warn, ok, info, tick. Without them the reel stays silent. */
+  sounds?: CodeReelSounds
   /** Accessible name. Defaults to the code itself. */
   label?: string
   /** Classes for the screen: size it here (default aspect-video, full width; e.g. aspect-[9/16] for a vertical reel). */
@@ -353,7 +358,7 @@ function Chrome({ kind, file, fn, skin }: { kind: CodeReelChrome; file: string; 
  * reflection, and the lines around it fall out of focus. Words can pause on an autocomplete menu
  * before they are accepted, finished lines can raise a wavy underline and an inline diagnostic,
  * and a terminal prints its logs at the end while the camera pulls back to the whole file. Four
- * skins (neon, paper, phosphor, ink), three frames, optional synthesized sound. Everything is a
+ * skins (neon, paper, phosphor, ink), three frames, optional sounds from your own files. Everything is a
  * function of time, so it scrubs, loops, and follows a video, a song or a Timeline through `time`.
  * Reduced motion shows each line whole, with a still camera.
  */
@@ -376,6 +381,7 @@ export function CodeReel({
   glow,
   texture = true,
   sound = false,
+  sounds,
   label,
   className,
 }: CodeReelProps) {
@@ -422,19 +428,23 @@ export function CodeReel({
 
   // sound follows what changed since the last frame; jumps (seeking) stay silent
   const heard = useRef({ active: -1, typed: 0, menu: false, diags: 0, logs: 0 })
-  const volume = sound === true ? 0.5 : typeof sound === 'number' ? sound : 0
+  const volume = sounds && (sound === true ? 0.5 : typeof sound === 'number' ? sound : 0)
+  const set = sounds ?? {}
+  useEffect(() => {
+    if (volume && sounds) preloadReelSounds(sounds)
+  }, [volume, sounds])
   useEffect(() => {
     const h = heard.current
     const next = { active, typed: typedActive, menu: menuOpen, diags: diagsShown.length, logs: logsShown }
-    if (volume > 0) {
+    if (volume) {
       const sameLine = active === h.active
       const step = typedActive - h.typed
-      if (sameLine && step > 0 && step <= 3) playReelSound('key', volume)
-      if (sameLine && h.menu && !menuOpen && step > 0) playReelSound('accept', volume)
-      if (next.diags === h.diags + 1) playReelSound(diagsShown[diagsShown.length - 1]?.diagnostic?.tone ?? 'error', volume)
+      if (sameLine && h.menu && !menuOpen && step > 0) playReelSound('accept', volume, set)
+      else if (sameLine && step > 0 && step <= 3) playReelSound('key', volume, set)
+      if (next.diags === h.diags + 1) playReelSound(diagsShown[diagsShown.length - 1]?.diagnostic?.tone ?? 'error', volume, set)
       if (next.logs === h.logs + 1) {
         const tone = logs[next.logs - 1]?.tone
-        playReelSound(tone === 'ok' || tone === 'error' || tone === 'warn' ? tone : 'tick', volume)
+        playReelSound(tone === 'ok' || tone === 'error' || tone === 'warn' ? tone : 'tick', volume, set)
       }
     }
     heard.current = next
@@ -553,7 +563,7 @@ export function CodeReel({
         ref={stage}
         role="img"
         aria-label={text}
-        onPointerDown={volume > 0 ? unlockReelSound : undefined}
+        onPointerDown={volume ? unlockReelSound : undefined}
         className={cn('ui-r relative isolate aspect-video w-full overflow-hidden [perspective:1100px] [perspective-origin:50%_47%]', className)}
         style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)', background: skin.bg }}
       >
