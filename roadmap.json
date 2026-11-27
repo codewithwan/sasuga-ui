@@ -143,6 +143,11 @@
       "title": "Lyrics player: now-playing screen, synced lyric sheet with karaoke fill, motion lyrics",
       "status": "done",
       "tag": "Motion"
+    },
+    {
+      "title": "Terminal replay: scripted sessions with spinners, progress and real key sounds",
+      "status": "done",
+      "tag": "Motion"
     }
   ]
 }
