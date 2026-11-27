@@ -148,13 +148,9 @@ function Playground() {
         <Range label="Height" value={stage.h} min={MIN_H} max={MAX_H} onChange={stage.setH} />
       </div>
       <div className="grid justify-items-center gap-3">
-        <div className="max-w-full overflow-x-auto pr-2 pb-2">
-          <ToggleGroup label="Word style" size="sm" sfx={false} items={WORD_STYLES} value={look} onValueChange={(v) => setLook(v as WordStyle)} className="max-w-none" />
-        </div>
+        <ToggleGroup label="Word style" size="sm" sfx={false} items={WORD_STYLES} value={look} onValueChange={(v) => setLook(v as WordStyle)} />
         <div className="flex max-w-full flex-wrap justify-center gap-3">
-          <div className="max-w-full overflow-x-auto pr-2 pb-2">
-            <ToggleGroup label="Align" size="sm" sfx={false} items={ALIGNS} value={align} onValueChange={(v) => setAlign(v as KineticTypeAlign)} className="max-w-none" />
-          </div>
+          <ToggleGroup label="Align" size="sm" sfx={false} items={ALIGNS} value={align} onValueChange={(v) => setAlign(v as KineticTypeAlign)} />
           <ToggleGroup label="Vertical align" size="sm" sfx={false} items={VALIGNS} value={valign} onValueChange={(v) => setValign(v as KineticTypeVAlign)} />
           <ToggleGroup label="Fit" size="sm" sfx={false} items={FITS} value={fit} onValueChange={(v) => setFit(v as KineticTypeFit)} />
         </div>

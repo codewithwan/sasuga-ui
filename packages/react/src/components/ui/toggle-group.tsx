@@ -21,7 +21,7 @@ export type ToggleGroupProps = Single | Multiple
 
 const POP = 'cubic-bezier(.2,1.6,.4,1)'
 const SIZE = { sm: 'px-3.5 py-2 text-[14px]', md: 'px-4 py-2.5 text-[16px]' }
-const STICKER = 'ui-border-thin ui-pill ui-fill pointer-events-none absolute top-1 bottom-1 left-0 -z-10 bg-accent'
+const STICKER = 'ui-border-thin ui-pill ui-fill pointer-events-none absolute top-0 left-0 -z-10 bg-accent'
 
 function hit(el: HTMLElement, text: string | false, big: boolean) {
   const { x, y, rect } = centerOf(el)
@@ -59,16 +59,20 @@ export function ToggleGroup(props: ToggleGroupProps) {
   const prevSingle = useRef(activeIdx)
   const prevMany = useRef(selMany)
 
-  // left / right edge of the sliding sticker, plus a squash
+  // when the items do not fit on one line they wrap (never a sideways scroll) and the group turns into a rounded box
+  const [wrapped, setWrapped] = useState(false)
+
+  // left / right edge of the sliding sticker, its row (y, h), plus a squash
   const spring = useSprings(
     sticker,
-    { l: 0, r: 0 },
+    { l: 0, r: 0, y: 0, h: 0 },
     (v, el) => {
       el.style.width = `${Math.max(v.r - v.l, 0)}px`
-      el.style.transform = `translateX(${v.l}px)`
+      el.style.height = `${Math.max(v.h, 0)}px`
+      el.style.transform = `translate(${v.l}px, ${v.y}px)`
       const i = landing.current
       const b = i === null ? null : btns.current[i]
-      if (b && Math.abs(v.l - b.offsetLeft) < 1.5 && Math.abs(v.r - b.offsetLeft - b.offsetWidth) < 1.5) {
+      if (b && Math.abs(v.l - b.offsetLeft) < 1.5 && Math.abs(v.r - b.offsetLeft - b.offsetWidth) < 1.5 && Math.abs(v.y - b.offsetTop) < 1.5) {
         landing.current = null
         el.animate([{ scale: '1' }, { scale: '1.06 .78', offset: 0.3 }, { scale: '.98 1.06', offset: 0.65 }, { scale: '1' }], { duration: 340, easing: 'ease-out' })
         b.animate([{ transform: 'none' }, { transform: 'translateY(-3px) scale(1.08)', offset: 0.4 }, { transform: 'none' }], { duration: 320, easing: POP })
@@ -80,7 +84,7 @@ export function ToggleGroup(props: ToggleGroupProps) {
 
   const edges = (i: number) => {
     const b = btns.current[i]
-    return b ? { l: b.offsetLeft, r: b.offsetLeft + b.offsetWidth } : null
+    return b ? { l: b.offsetLeft, r: b.offsetLeft + b.offsetWidth, y: b.offsetTop, h: b.offsetHeight } : null
   }
 
   useLayoutEffect(() => {
@@ -96,6 +100,28 @@ export function ToggleGroup(props: ToggleGroupProps) {
     return () => ro.disconnect()
   }, [multi, spring])
   useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  // wrap detection (both modes): items on more than one row turn the pill into a rounded box
+  useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    const check = () => {
+      const tops = btns.current.filter((b): b is HTMLButtonElement => !!b).map((b) => b.offsetTop)
+      setWrapped(tops.some((t) => Math.abs(t - tops[0]) > 2))
+    }
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    document.fonts?.ready.then(check)
+    return () => ro.disconnect()
+  }, [items.length])
+  // centring the wrapped rows moves the buttons: put the sticker back under the picked one
+  useLayoutEffect(() => {
+    if (multi) return
+    const e = edges(prevSingle.current)
+    if (e) spring.snap(e)
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- only when the layout mode flips
+  }, [wrapped])
 
   // single: slide the sticker — the leading edge goes first, the trailing one follows
   useLayoutEffect(() => {
@@ -118,8 +144,8 @@ export function ToggleGroup(props: ToggleGroupProps) {
     landing.current = activeIdx
     sticker.current?.animate([{ scale: '1' }, { scale: '.94 1.1' }], { duration: 90, easing: 'ease-out' })
     window.clearTimeout(timer.current)
-    if (right) spring.set({ r: e.r })
-    else spring.set({ l: e.l })
+    if (right) spring.set({ r: e.r, y: e.y, h: e.h })
+    else spring.set({ l: e.l, y: e.y, h: e.h })
     timer.current = window.setTimeout(() => spring.set(e), uiStyle() === 'flat' ? 50 : 95)
     const a = btns.current[from]?.getBoundingClientRect()
     const b = btns.current[activeIdx]?.getBoundingClientRect()
@@ -194,7 +220,7 @@ export function ToggleGroup(props: ToggleGroupProps) {
       ref={root}
       role={multi ? 'group' : 'radiogroup'}
       aria-label={label}
-      className={cn('ui-border ui-pill ui-shadow-sm relative isolate inline-flex max-w-full gap-0.5 bg-paper p-1', className)}
+      className={cn('ui-border ui-shadow-sm relative isolate inline-flex max-w-full flex-wrap gap-0.5 bg-paper p-1', wrapped ? 'ui-r justify-center' : 'ui-pill', className)}
     >
       {!multi && <span ref={sticker} aria-hidden="true" className={cn(STICKER, activeIdx < 0 && 'opacity-0')} />}
       {items.map((it, i) => {

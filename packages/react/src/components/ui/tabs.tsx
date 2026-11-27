@@ -44,7 +44,7 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
   const panels = useRef<(HTMLDivElement | null)[]>([])
   const ghosts = useRef<(HTMLSpanElement | null)[]>([])
   const trail = useRef<Sample[]>([])
-  const landing = useRef<{ i: number; x: number } | null>(null)
+  const landing = useRef<{ i: number; x: number; y: number } | null>(null)
   const listW = useRef(0)
 
   const land = (i: number) => {
@@ -62,7 +62,7 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
 
   const spring = useSprings(
     ink,
-    { x: 0, w: 0 },
+    { x: 0, w: 0, y: 0, h: 0 },
     (v, el, vel) => {
       const flat = uiStyle() === 'flat'
       const speed = Math.abs(vel.x)
@@ -71,16 +71,18 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
       const left = Math.max(vel.x > 0 ? v.x - st : v.x, 4)
       const right = Math.min(v.x + v.w + (vel.x < 0 ? st : 0), (listW.current || Infinity) - 4)
       el.style.width = `${Math.max(right - left, 0)}px`
-      el.style.transform = `translateX(${left}px) scaleY(${1 - clamp(speed / 5000, 0, 0.3)})`
+      el.style.height = `${Math.max(v.h, 0)}px`
+      el.style.transform = `translate(${left}px, ${v.y}px) scaleY(${1 - clamp(speed / 5000, 0, 0.3)})`
       const lag = lagged(trail.current, v.x, performance.now())
       ghosts.current.forEach((g, i) => {
         if (!g) return
         g.style.width = `${Math.max(v.w, 0)}px`
-        g.style.transform = `translateX(${lag[i]}px) scaleY(.86)`
+        g.style.height = `${Math.max(v.h, 0)}px`
+        g.style.transform = `translate(${lag[i]}px, ${v.y}px) scaleY(.86)`
         g.style.opacity = String(Math.abs(lag[i] - v.x) < 6 ? 0 : clamp((speed - 200) / 1600, 0, 1) * GHOST_ALPHA[i] * (flat ? 0.5 : 1))
       })
       const l = landing.current
-      if (l && Math.abs(v.x - l.x) < 2) {
+      if (l && Math.abs(v.x - l.x) < 2 && Math.abs(v.y - l.y) < 2) {
         landing.current = null
         land(l.i)
       }
@@ -90,12 +92,15 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
 
   const measure = (i: number) => {
     const b = btns.current[i]
-    return b ? { x: b.offsetLeft, w: b.offsetWidth } : null
+    return b ? { x: b.offsetLeft, w: b.offsetWidth, y: b.offsetTop, h: b.offsetHeight } : null
   }
 
   useLayoutEffect(() => {
     const place = () => {
       listW.current = list.current?.scrollWidth ?? 0
+      // tabs that do not fit wrap onto another row (no sideways scroll); the list then becomes a rounded box
+      const tops = btns.current.filter((b): b is HTMLButtonElement => !!b).map((b) => b.offsetTop)
+      list.current?.toggleAttribute('data-wrapped', tops.some((t) => Math.abs(t - tops[0]) > 2))
       const m = measure(activeRef.current)
       if (m) spring.snap(m)
     }
@@ -134,7 +139,7 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
     if (focus) b?.focus()
     if (!m) return
     if (prefersReducedMotion()) return spring.snap(m)
-    landing.current = { i, x: m.x }
+    landing.current = { i, x: m.x, y: m.y }
     spring.set(m)
     const a = btns.current[from]
     if (!a || !b) return
@@ -165,7 +170,7 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
         role="tablist"
         aria-label={label}
         onKeyDown={onKey}
-        className="ui-border ui-pill ui-shadow-sm relative isolate inline-flex max-w-full gap-0.5 overflow-x-auto bg-paper p-1"
+        className="ui-border ui-pill ui-shadow-sm relative isolate inline-flex max-w-full flex-wrap gap-0.5 bg-paper p-1 data-wrapped:rounded-[var(--ui-r)] data-wrapped:justify-center"
       >
         {LAGS.map((_, i) => (
           <span
@@ -174,10 +179,10 @@ export function Tabs({ tabs, label, defaultTab, onTabChange }: Props) {
               ghosts.current[i] = el
             }}
             aria-hidden="true"
-            className="ui-pill pointer-events-none absolute top-1 bottom-1 left-0 -z-10 bg-accent-soft opacity-0"
+            className="ui-pill pointer-events-none absolute top-0 left-0 -z-10 bg-accent-soft opacity-0"
           />
         ))}
-        <span ref={ink} aria-hidden="true" className="ui-pill absolute top-1 bottom-1 left-0 -z-10 bg-accent" />
+        <span ref={ink} aria-hidden="true" className="ui-pill absolute top-0 left-0 -z-10 bg-accent" />
         {tabs.map((t, i) => (
           <button
             key={t.id}

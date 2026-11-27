@@ -63,12 +63,8 @@ function StageDemo() {
       </Scene>
       <TimelineScrubber timeline={tl} label="Caption demo" />
       <div className="grid justify-items-center gap-3">
-        <div className="max-w-full overflow-x-auto pr-2 pb-2">
-          <ToggleGroup label="Preset" size="sm" sfx={false} items={PRESETS} value={preset} onValueChange={(v) => setPreset(v as KineticCaptionPreset)} className="max-w-none" />
-        </div>
-        <div className="max-w-full overflow-x-auto pr-2 pb-2">
-          <ToggleGroup label="Word style" size="sm" sfx={false} items={WORD_STYLES} value={look} onValueChange={(v) => setLook(v as WordStyle)} className="max-w-none" />
-        </div>
+        <ToggleGroup label="Preset" size="sm" sfx={false} items={PRESETS} value={preset} onValueChange={(v) => setPreset(v as KineticCaptionPreset)} />
+        <ToggleGroup label="Word style" size="sm" sfx={false} items={WORD_STYLES} value={look} onValueChange={(v) => setLook(v as WordStyle)} />
         <div className="flex flex-wrap justify-center gap-3">
           <ToggleGroup
             label="Position"
