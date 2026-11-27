@@ -177,11 +177,10 @@ const SKINS: Record<CodeReelSkin, Skin> = {
 
 const TEXTURE: Record<Skin['texture'], CSSProperties | null> = {
   lcd: {
-    backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.55) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgb(0 0 0/.45) 0 1px, transparent 1px 3px)',
-    mixBlendMode: 'multiply',
-    opacity: 0.6,
+    backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.5) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgb(0 0 0/.4) 0 1px, transparent 1px 3px)',
+    opacity: 0.55,
   },
-  scan: { backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.6) 0 1px, transparent 1px 3px)', mixBlendMode: 'multiply', opacity: 0.75 },
+  scan: { backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.55) 0 1px, transparent 1px 3px)', opacity: 0.7 },
   tone: { backgroundImage: 'radial-gradient(rgb(20 20 20/.16) 0.9px, transparent 1.3px)', backgroundSize: '6px 6px', opacity: 1 },
   none: null,
 }
@@ -404,7 +403,8 @@ export function CodeReel({
   const showTerm = logs.length > 0 && t >= termAt
   const overview = camera === 'static' || reduced || showTerm
   const shown = started ? active + 1 : 0
-  const typedActive = started && ap ? Math.floor(Math.min(lines[active]?.code.length ?? 0, ap.typed(lt))) : 0
+  const caret = started && ap ? Math.min(lines[active]?.code.length ?? 0, ap.typed(lt)) : 0
+  const typedActive = Math.floor(caret)
   const diagsShown = lines.slice(0, shown).filter((l, i) => l.diagnostic && t - plans[i].start >= plans[i].dur + 0.15)
   const logsShown = showTerm ? logs.filter((_, k) => t >= termAt + 0.6 + k * 0.45).length : 0
 
@@ -412,10 +412,12 @@ export function CodeReel({
   const stage = useRef<HTMLDivElement>(null)
   const plane = useRef<HTMLDivElement>(null)
   const cursor = useRef<HTMLSpanElement>(null)
+  /** Start of the active line's text: with the caret count it gives a camera target that never steps. */
+  const lineStart = useRef<HTMLSpanElement>(null)
   const code = useRef<HTMLDivElement>(null)
-  const want = useRef({ overview, zoom, reduced })
+  const want = useRef({ overview, zoom, reduced, caret: 0, line: -1 })
   useEffect(() => {
-    want.current = { overview, zoom, reduced }
+    want.current = { overview, zoom, reduced, caret, line: started ? active : -1 }
   })
 
   // sound follows what changed since the last frame; jumps (seeking) stay silent
@@ -446,7 +448,15 @@ export function CodeReel({
     let last = performance.now()
     let visible = true
     let resumed = false
-    const cam = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, ready: false }
+    // x / y ride a critically damped spring (continuous speed, eases between lines); the rest settle exponentially
+    const cam = { x: 0, y: 0, vx: 0, vy: 0, z: 0, rx: 0, ry: 0, rz: 0, ready: false }
+    const fontPx = parseFloat(getComputedStyle(pl).fontSize) || 22
+    const probe = document.createElement('span')
+    probe.textContent = '0000000000'
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre'
+    pl.appendChild(probe)
+    const chW = probe.offsetWidth / 10 || fontPx * 0.6
+    probe.remove()
 
     const offsetIn = (el: HTMLElement | null) => {
       let x = 0
@@ -466,7 +476,7 @@ export function CodeReel({
       const W = st.clientWidth
       const H = st.clientHeight
       if (!W || !H) return
-      const { overview: wide, zoom: z0, reduced: still } = want.current
+      const { overview: wide, zoom: z0, reduced: still, caret: at, line } = want.current
       const s = now / 1000
       const target = { x: 0, y: 0, z: 1, rx: 0, ry: 0, rz: 0 }
       if (wide) {
@@ -475,12 +485,13 @@ export function CodeReel({
         const fit = Math.min(W / cw, H / ch) * 0.92
         Object.assign(target, { x: cw / 2, y: ch / 2, z: fit, rx: still ? 0 : 9, ry: still ? 0 : -9, rz: still ? 0 : -2.5 })
       } else {
-        const c = cursor.current
-        const p = c ? offsetIn(c) : offsetIn(code.current)
-        const fontPx = parseFloat(getComputedStyle(pl).fontSize) || 22
+        const base = lineStart.current
+        const onLine = base && Number(base.dataset.line) === line
+        const p = onLine ? offsetIn(base) : offsetIn(code.current)
         const z = (Math.min(W, H * 1.1) / 9.5 / fontPx) * z0
         Object.assign(target, {
-          x: p.x,
+          // line start + the caret as a fraction of characters: the camera glides instead of stepping per letter
+          x: p.x + (onLine ? at * chW : 0),
           y: p.y + fontPx * 0.55,
           z,
           rx: 17 + 3 * Math.sin(s * 0.31),
@@ -488,11 +499,18 @@ export function CodeReel({
           rz: -5 + 2 * Math.sin(s * 0.23),
         })
       }
-      const k = cam.ready ? 1 - Math.exp(-dt * (wide ? 1.8 : 3.4)) : 1
       const kz = cam.ready ? 1 - Math.exp(-dt * (wide ? 1.5 : 2.2)) : 1
+      if (!cam.ready) {
+        cam.x = target.x
+        cam.y = target.y
+      } else {
+        const w = wide ? 3 : 5.2
+        cam.vx += (w * w * (target.x - cam.x) - 2 * w * cam.vx) * dt
+        cam.vy += (w * w * (target.y - cam.y) - 2 * w * cam.vy) * dt
+        cam.x += cam.vx * dt
+        cam.y += cam.vy * dt
+      }
       cam.ready = true
-      cam.x += (target.x - cam.x) * k
-      cam.y += (target.y - cam.y) * k
       cam.z += (target.z - cam.z) * kz
       cam.rx += (target.rx - cam.rx) * kz
       cam.ry += (target.ry - cam.ry) * kz
@@ -539,7 +557,7 @@ export function CodeReel({
         className={cn('ui-r relative isolate aspect-video w-full overflow-hidden [perspective:1100px] [perspective-origin:50%_47%]', className)}
         style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)', background: skin.bg }}
       >
-        <style>{'@keyframes cr-chip{from{opacity:0;transform:translateX(-0.6em) scale(.9)}to{opacity:1;transform:none}}@keyframes cr-in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}'}</style>
+        <style>{'@keyframes cr-chip{from{opacity:0;transform:translateX(-0.6em) scale(.9)}to{opacity:1;transform:none}}@keyframes cr-in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}@keyframes cr-line{from{opacity:0;translate:0 .35em}}'}</style>
         <div
           ref={plane}
           aria-hidden="true"
@@ -547,7 +565,7 @@ export function CodeReel({
           style={{
             color: skin.fg,
             background: skin.bg,
-            textShadow: glowOn ? '0 0 0.32em color-mix(in srgb, currentColor 55%, transparent), 0 0 0.08em currentColor' : undefined,
+            textShadow: glowOn ? '0 0 0.3em color-mix(in srgb, currentColor 60%, transparent)' : undefined,
           }}
         >
           <Chrome kind={chrome} file={file} fn={fn} skin={skin} />
@@ -579,13 +597,13 @@ export function CodeReel({
               return (
                 <div
                   key={i}
-                  className="relative flex items-center whitespace-pre transition-[filter,opacity] duration-500"
+                  className="relative flex animate-[cr-line_.35s_ease-out_both] items-center whitespace-pre transition-[filter,opacity] duration-500"
                   style={{ height: `${LINE_H}em`, filter: b ? `blur(${b}px)` : undefined, opacity: overview ? 1 : Math.max(0.35, 1 - Math.abs(i - active) * 0.12 * depth) }}
                 >
                   <span className="w-[4ch] shrink-0 pr-[1.4ch] text-right text-[0.7em]" style={{ color: skin.mute, opacity: i === active ? 1 : 0.5, textShadow: 'none' }}>
                     {i + 1}
                   </span>
-                  <span className="relative">
+                  <span ref={i === active ? lineStart : undefined} data-line={i} className="relative">
                     <Code segs={segs[i]} n={n} showSq={done} tone={skin.tone[d?.tone ?? 'error']} skin={skin} />
                     {i === active && (
                       <span ref={cursor} className="relative inline-block h-[1.15em] w-0 align-[-0.2em]">
