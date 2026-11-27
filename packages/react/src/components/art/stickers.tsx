@@ -120,20 +120,41 @@ const TW: CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center' 
 
 /* ───────────── Logo ───────────── */
 
-/** The brand mark: an impact star with a heart, or with a short text (`mark`, e.g. '好')
- *  stamped in its place when `mark` is anything other than 'heart'. */
+/** The 'star' logo, traced from the chosen logo concept (docs/ASSETS.md, prompt 3, concept 1):
+ *  a hand-drawn ten-point burst with a white star and three pop shards. Centre-line polygons in a
+ *  64 box; the outline scales with the mark so it keeps the drawing's weight at every size. */
+const LOGO = {
+  burst:
+    'M4.1 30L15.3 36.4L5.5 47.9L19.6 44.5L18.3 55.6L31.1 48.3L38.5 56.4L41 46.4L56.6 51.2L47.6 38.2L54.9 34.8L47 30.9L55.4 16.2L42 22L42.8 15.4L35.1 19.5L28.9 7.2L24.2 19.2L16.2 14.9L18.6 24.7Z',
+  star: 'M43.1 28.7L35.9 27.9L30.2 22.7L26.6 28.9L20.1 31.9L25 37.5L25.1 44.6L32.9 41.6L40.5 43.1L39.3 35.6Z',
+  shards: ['M61.9 38.3L52.5 40.3L60.3 44.4Z', 'M2.8 19.9L3 25.9L10.9 24.4Z', 'M5.1 12.2L14.7 21.4L9.8 9.4Z'],
+}
+const LOGO_LINE: CSSProperties = { stroke: 'var(--ui-line)', strokeWidth: 1.9, strokeLinejoin: 'round', strokeLinecap: 'round' }
+
+/** The brand mark. `mark="star"` is the logo; 'heart' or a short text (e.g. '好') stamps that
+ *  on a procedural burst instead, for rebrands. */
 export function BrandMark({ mark = 'heart', label, className, style, ...rest }: StickerProps & { mark?: string }) {
   const d = burstPath(32, 32, 30, 30, 10, 0.78, 4)
+  if (mark === 'star')
+    return (
+      <svg viewBox="0 0 64 64" {...a11y(label)} className={cn('block h-auto w-full overflow-visible', className)} style={style} {...rest}>
+        {label && <title>{label}</title>}
+        <path d={LOGO.burst} className={DROP} transform="translate(1.6 3)" />
+        <path d={LOGO.burst} style={{ fill: FILL.accent, ...LOGO_LINE }} />
+        {LOGO.shards.map((s) => (
+          <path key={s} d={s} style={{ fill: FILL.pop, ...LOGO_LINE }} />
+        ))}
+        <g data-glyph="">
+          <path d={LOGO.star} style={{ fill: '#fff', ...LOGO_LINE }} />
+        </g>
+      </svg>
+    )
   return (
     <svg viewBox="0 0 64 64" {...a11y(label)} className={cn('block h-auto w-full overflow-visible', className)} style={style} {...rest}>
       {label && <title>{label}</title>}
       <path d={d} className={DROP} transform="translate(2.5 3)" />
       <path d={d} {...LINE} style={{ fill: FILL.accent, ...lineStyle() }} />
-      {mark === 'star' ? (
-        <g data-glyph="">
-          <path d="M32.00 17.50L36.11 27.84L47.22 28.56L38.66 35.66L41.40 46.44L32.00 40.50L22.60 46.44L25.34 35.66L16.78 28.56L27.89 27.84Z" {...LINE} style={{ fill: '#fff', ...lineStyle() }} />
-        </g>
-      ) : mark === 'heart' ? (
+      {mark === 'heart' ? (
         <g data-glyph="">
           <path
             d="M32 44.5C24 39 18.5 33.6 18.5 27.6c0-4.3 3.2-7.4 7.1-7.4 2.7 0 5 1.4 6.4 3.6 1.4-2.2 3.7-3.6 6.4-3.6 3.9 0 7.1 3.1 7.1 7.4 0 6-5.5 11.4-13.5 16.9Z"

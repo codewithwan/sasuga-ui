@@ -56,7 +56,7 @@ function useRoadmap() {
   return data
 }
 
-/** Open "request" issues from GitHub, most 👍 first (cached for the session; null while loading). */
+/** Open "request" issues from GitHub, most thumbs-up first (cached for the session; null while loading). */
 function useRequests() {
   const [list, setList] = useState<Request[] | null | 'error'>(null)
   useEffect(() => {
@@ -247,16 +247,30 @@ export function Roadmap() {
         </p>
       }
     >
-      <div className="flex flex-wrap gap-3">
-        <ButtonLink href={issueForm('component-request.yml')} {...EXT} variant="accent" size="sm" sfx={false}>
-          <Icon name="plus" size={16} tone="line" /> Request a component
-        </ButtonLink>
-        <ButtonLink href={issueForm('framework-port.yml')} {...EXT} size="sm" sfx={false}>
-          Help port to Vue
-        </ButtonLink>
-        <ButtonLink href={issueForm('bug-report.yml')} {...EXT} variant="outline" size="sm" sfx={false}>
-          Report a bug
-        </ButtonLink>
+      <div className="ui-card flex flex-wrap items-center gap-x-6 gap-y-4 bg-paper p-5 min-[640px]:flex-nowrap">
+        <img
+          src={withBase('/assets/mascot/koma-wink.webp')}
+          alt=""
+          width={768}
+          height={768}
+          loading="lazy"
+          decoding="async"
+          className="-my-2 h-auto w-24 shrink-0 min-[640px]:w-28"
+        />
+        <div className="grid min-w-0 gap-3">
+          <p className="ui-head m-0 text-xl leading-tight text-ink">Missing a component? Ask for it.</p>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href={issueForm('component-request.yml')} {...EXT} variant="accent" size="sm" sfx={false}>
+              <Icon name="plus" size={16} tone="line" /> Request a component
+            </ButtonLink>
+            <ButtonLink href={issueForm('framework-port.yml')} {...EXT} size="sm" sfx={false}>
+              Help port to Vue
+            </ButtonLink>
+            <ButtonLink href={issueForm('bug-report.yml')} {...EXT} variant="outline" size="sm" sfx={false}>
+              Report a bug
+            </ButtonLink>
+          </div>
+        </div>
       </div>
 
       {data === null && <P>Loading the roadmap…</P>}
@@ -300,7 +314,7 @@ export function Roadmap() {
 
       <Section id="requests" title="Requests">
         <P>
-          Open component requests from GitHub, most 👍 first. Add a 👍 on the issue to vote, or{' '}
+          Open component requests from GitHub, most-voted first. Give the issue a thumbs-up to vote, or{' '}
           <a href={issueForm('component-request.yml')} {...EXT} className="font-bold text-accent">
             open a new one
           </a>

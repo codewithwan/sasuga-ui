@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui'
-import { site } from '@/data/site'
+import { site, withBase } from '@/data/site'
 import { docs } from '@/docs/registry'
 import { CATEGORIES } from '@/docs/types'
 import { STYLES, THEMES } from '@/lib/theme'
@@ -12,10 +12,20 @@ export function Introduction() {
   return (
     <Guide to="/docs" lead={<p className="m-0">{site.tagline}</p>}>
       <Section id="what" title="What it is">
-        <P>
-          {site.name} is a copy-paste React component kit with game feel, built around anime impact frames. Controls sit calm like stickers at rest, then squash, overshoot and burst with drawn impacts and sound-effect lettering when
-          you touch them. It is made for web games, game launchers and fan sites, and anywhere else that should feel a little more alive.
-        </P>
+        <div className="flex flex-col-reverse items-center gap-x-8 gap-y-4 min-[640px]:flex-row">
+          <P>
+            {site.name} is a copy-paste React component kit with game feel, built around anime impact frames. Controls sit calm like stickers at rest, then squash, overshoot and burst with drawn impacts and sound-effect lettering
+            when you touch them. It is made for web games, game launchers and fan sites, and anywhere else that should feel a little more alive.
+          </P>
+          <img
+            src={withBase('/assets/mascot/koma-happy.webp')}
+            alt={`Koma, the ${site.name} mascot, cheering`}
+            width={768}
+            height={768}
+            decoding="async"
+            className="h-auto w-32 shrink-0 min-[640px]:w-40"
+          />
+        </div>
         <PreviewPanel>
           <div className="flex flex-wrap justify-center gap-6">
             <Button variant="accent">Click me</Button>

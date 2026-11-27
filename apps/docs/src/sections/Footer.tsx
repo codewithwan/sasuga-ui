@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BrandMark } from '@/components/art/stickers'
 import { WipeLink } from '@/components/site/WipeLink'
 import { GitHubCard } from '@/components/site/GitHubCard'
 import { HoverCard } from '@/components/ui/hover-card'
@@ -47,9 +48,12 @@ export function Footer() {
       <div className="frame">
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 min-[900px]:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))] min-[900px]:gap-x-10 min-[900px]:py-14">
           <div className="col-span-2 grid content-start gap-4 min-[900px]:col-span-1">
-            <WipeLink to="/" label="Home" className="ui-head inline-flex w-max items-baseline gap-2 text-[32px] leading-none text-ink no-underline focus-visible:ui-focus">
-              {site.word}
-              <span className="text-accent">{site.suffix}</span>
+            <WipeLink to="/" label="Home" className="ui-head inline-flex w-max items-center gap-2 text-[32px] leading-none text-ink no-underline focus-visible:ui-focus">
+              <BrandMark mark={site.mark} className="w-[1.3em]" />
+              <span>
+                {site.word}
+                <span className="text-accent">{site.suffix}</span>
+              </span>
               <span className="font-jp text-xs text-mute">{site.jp}</span>
             </WipeLink>
             <p className="m-0 max-w-[38ch] text-[15px] leading-relaxed text-mute">{site.tagline}</p>

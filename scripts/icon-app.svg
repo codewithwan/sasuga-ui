@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#f6f5ff"/>
-  <g transform="translate(256 256) scale(5.2632) translate(-31 -31)">
-    <path d="M31.00 2.50L37.69 10.40L47.75 7.94L48.52 18.27L58.11 22.19L52.66 31.00L58.11 39.81L48.52 43.73L47.75 54.06L37.69 51.60L31.00 59.50L24.31 51.60L14.25 54.06L13.48 43.73L3.89 39.81L9.34 31.00L3.89 22.19L13.48 18.27L14.25 7.94L24.31 10.40Z" fill="#b8b3ff" transform="translate(2.5 3)" stroke-linejoin="round"/>
-    <path d="M31.00 2.50L37.69 10.40L47.75 7.94L48.52 18.27L58.11 22.19L52.66 31.00L58.11 39.81L48.52 43.73L47.75 54.06L37.69 51.60L31.00 59.50L24.31 51.60L14.25 54.06L13.48 43.73L3.89 39.81L9.34 31.00L3.89 22.19L13.48 18.27L14.25 7.94L24.31 10.40Z" fill="#7a6cff" stroke="#1d1a4a" stroke-width="3.5" stroke-linejoin="round"/>
-    <path d="M32.00 17.50L36.11 27.84L47.22 28.56L38.66 35.66L41.40 46.44L32.00 40.50L22.60 46.44L25.34 35.66L16.78 28.56L27.89 27.84Z" fill="#fff" stroke="#1d1a4a" stroke-width="3" stroke-linejoin="round"/>
+  <g transform="translate(256 256) scale(5.6) translate(-32 -32)">
+  <g stroke="#1d1a4a" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4.1 30L15.3 36.4L5.5 47.9L19.6 44.5L18.3 55.6L31.1 48.3L38.5 56.4L41 46.4L56.6 51.2L47.6 38.2L54.9 34.8L47 30.9L55.4 16.2L42 22L42.8 15.4L35.1 19.5L28.9 7.2L24.2 19.2L16.2 14.9L18.6 24.7Z" fill="#b8b3ff" stroke="none" transform="translate(1.6 3)"/>
+    <path d="M4.1 30L15.3 36.4L5.5 47.9L19.6 44.5L18.3 55.6L31.1 48.3L38.5 56.4L41 46.4L56.6 51.2L47.6 38.2L54.9 34.8L47 30.9L55.4 16.2L42 22L42.8 15.4L35.1 19.5L28.9 7.2L24.2 19.2L16.2 14.9L18.6 24.7Z" fill="#7a6cff"/>
+    <path d="M61.9 38.3L52.5 40.3L60.3 44.4Z" fill="#ff5c9a"/>
+    <path d="M2.8 19.9L3 25.9L10.9 24.4Z" fill="#ff5c9a"/>
+    <path d="M5.1 12.2L14.7 21.4L9.8 9.4Z" fill="#ff5c9a"/>
+    <path d="M43.1 28.7L35.9 27.9L30.2 22.7L26.6 28.9L20.1 31.9L25 37.5L25.1 44.6L32.9 41.6L40.5 43.1L39.3 35.6Z" fill="#fff"/>
+  </g>
   </g>
 </svg>

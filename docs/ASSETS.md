@@ -6,7 +6,7 @@ Raster art for sasuga/ui is generated with ChatGPT image generation (GPT-image) 
 
 1. Koma character sheet: the canonical look of the mascot (turnaround + expressions). Run it first and attach it to prompt 2.
 2. Key visual: one hero scene for the README top and the social preview.
-3. Logo concepts: four directions for the mark. The chosen one is **redrawn as SVG** (`BrandMark`) — the raster is a reference, never the shipped logo.
+3. Logo concepts: four directions for the mark. The chosen one is **traced into SVG** (`BrandMark`) so it is crisp at 16 px and follows the theme — the raster itself is never shipped.
 
 Each prompt is self-contained, so it can be re-run on its own.
 
@@ -14,9 +14,9 @@ Each prompt is self-contained, so it can be re-run on its own.
 
 | # | Sheet | Grid | Files (in `apps/docs/public/assets/`) | Used in |
 |---|---|---|---|---|
-| 1 | Koma character sheet | 2×4 landscape | `mascot/koma-{front,three-quarter,side,back,neutral,happy,surprised,wink}.webp` | README "Meet Koma", docs Mascot page (Reference art), 404 page |
-| 2 | Key visual | single 3:2 | `hero/koma-impact.webp` | README top image, `og-image.png` (rendered from `scripts/og-image.html`) |
-| 3 | Logo concepts | 2×2 | not shipped (kept in `assets/raw/`) | design reference only. Winner: concept 1 (burst + star), which matches the SVG `BrandMark` and the favicon already |
+| 1 | Koma character sheet | 2×4 landscape | `mascot/koma-{front,three-quarter,side,back,neutral,happy,surprised,wink}.webp` | README "Meet Koma", docs Introduction (happy), Roadmap request card (wink), Mascot page (Reference art, all 8), 404 page (surprised) |
+| 2 | Key visual | single 3:2 | `hero/koma-impact.webp` | landing hero (beside the headline, under it on phones), README top image, `og-image.png` (rendered from `scripts/og-image.html`) |
+| 3 | Logo concepts | 2×2 | no raster shipped (sheet kept in `assets/raw/`) | **concept 1 (burst + star + pop shards) is the logo**, traced into vector polygons: `BrandMark mark="star"` (nav, footer, intro, Stickers page), `favicon.svg`, `scripts/icon-app.svg` (favicons and app icons via `npm run icons`) and the social card. As SVG it stays crisp and follows the theme colour and the style's line colour |
 
 ## Generation workflow
 
