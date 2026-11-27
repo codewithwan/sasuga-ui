@@ -78,6 +78,21 @@
       "title": "Theme builder (pick your own colours)",
       "status": "planned",
       "tag": "Theming"
+    },
+    {
+      "title": "Timeline: a motion-graph clock (play, seek, sync to video)",
+      "status": "done",
+      "tag": "Motion"
+    },
+    {
+      "title": "Kinetic captions from SRT/VTT, 7 presets",
+      "status": "done",
+      "tag": "Motion"
+    },
+    {
+      "title": "Announcer, lower third, title card, scroll caption",
+      "status": "done",
+      "tag": "Motion"
     }
   ]
 }
