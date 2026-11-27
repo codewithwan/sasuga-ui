@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { CSSProperties, ReactElement, ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { cn } from '@/lib/utils'
+import { Slider } from './slider'
 
 export type TimelineControls = {
   /** Current time, seconds. */
@@ -174,34 +175,16 @@ const mmss = (s: number) => {
   const v = Math.max(0, Math.floor(s))
   return `${pad(Math.floor(v / 60))}:${pad(v % 60)}`
 }
-const spoken = (s: number) => {
-  const v = Math.max(0, Math.floor(s))
-  const m = Math.floor(v / 60)
-  return m ? `${m} min ${v % 60} s` : `${v % 60} s`
-}
-
-const THUMB =
-  '[&::-webkit-slider-thumb]:size-[18px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[length:var(--ui-bw-thin)] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-ink [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[var(--ui-shadow-sm)] [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 hover:[&::-webkit-slider-thumb]:scale-110 active:[&::-webkit-slider-thumb]:scale-125 ' +
-  '[&::-moz-range-thumb]:size-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[length:var(--ui-bw-thin)] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-ink [&::-moz-range-thumb]:bg-paper'
 
 /**
  * Transport for a timeline: play / pause, a seek slider and the elapsed / total time.
- * The slider is a native range (arrow keys, Page Up/Down, Home/End); Space or Enter on the
- * button toggles. Dragging pauses the clock and resumes it on release.
+ * The seek bar is the kit's Slider (arrow keys, Page Up/Down, Home/End, the time in its bubble);
+ * Space or Enter on the button toggles.
  */
 export function TimelineScrubber({ timeline, label = 'Timeline', className }: { timeline: TimelineControls; label?: string; className?: string }): ReactElement {
-  const { time, duration, playing, progress } = timeline
-  const resume = useRef(false)
-  const grab = () => {
-    resume.current = timeline.playing
-    if (resume.current) timeline.pause()
-  }
-  const release = () => {
-    if (resume.current) timeline.play()
-    resume.current = false
-  }
+  const { time, duration, playing } = timeline
   return (
-    <div role="group" aria-label={label} className={cn('ui-card flex min-w-0 items-center gap-2.5 px-2 py-1.5 sm:gap-3 sm:px-2.5', className)}>
+    <div role="group" aria-label={label} className={cn('ui-card flex min-w-0 items-center gap-2.5 px-2 pt-6 pb-1.5 sm:gap-3 sm:px-2.5', className)}>
       <button
         type="button"
         onClick={() => timeline.toggle()}
@@ -210,27 +193,21 @@ export function TimelineScrubber({ timeline, label = 'Timeline', className }: { 
       >
         <Icon name={playing ? 'pause' : 'play'} tone="solid" size={18} />
       </button>
-      <input
-        type="range"
-        aria-label={`Seek ${label.toLowerCase()}`}
+      <Slider
+        label={`Seek ${label.toLowerCase()}`}
         min={0}
-        max={duration || 0}
+        max={duration || 0.01}
         step={0.01}
         value={time}
-        aria-valuetext={`${spoken(time)} of ${spoken(duration)}`}
-        onChange={(e) => timeline.seek(Number(e.currentTarget.value))}
-        onPointerDown={grab}
-        onPointerUp={release}
-        onPointerCancel={release}
-        style={{ '--p': `${progress * 100}%` } as CSSProperties}
-        className={cn(
-          'ui-pill h-2 min-w-0 flex-1 cursor-pointer appearance-none bg-[linear-gradient(to_right,var(--color-accent)_var(--p),var(--color-accent-soft)_var(--p))] focus-visible:ui-focus',
-          THUMB,
-        )}
+        format={mmss}
+        ticks={false}
+        maxSfx={false}
+        minSfx={false}
+        onChange={(t) => timeline.seek(t)}
+        className="-mt-6 min-w-0 flex-1"
       />
       <span className="shrink-0 font-mono text-[12px] leading-none text-mute tabular-nums" aria-hidden="true">
-        <span className="text-ink">{mmss(time)}</span>
-        <span className="hidden min-[380px]:inline"> / {mmss(duration)}</span>
+        {mmss(duration)}
       </span>
     </div>
   )

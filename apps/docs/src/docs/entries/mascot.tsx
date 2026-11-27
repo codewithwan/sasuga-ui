@@ -4,6 +4,7 @@ import { Chibi, MASCOT_NAME, Mascot } from '@/components/art/mascot'
 import type { ChibiPose, MascotExpression } from '@/components/art/mascot'
 import { Art } from '@/components/site/Art'
 import { cn } from '@/lib/utils'
+import { Switch } from '@/components/ui/switch'
 import type { DocEntry } from '../types'
 
 const EXPRESSIONS: MascotExpression[] = ['neutral', 'happy', 'surprised', 'angry', 'hurt', 'wink', 'smug']
@@ -53,10 +54,10 @@ function MascotDemo() {
       </div>
       <p className="m-0 text-center text-sm text-mute">Pick a face to see her switch.</p>
       <Picker label="Expression" items={EXPRESSIONS} value={face} onChange={setFace} />
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-mute">
-        <input type="checkbox" checked={talking} onChange={(e) => setTalking(e.target.checked)} className="accent-(--color-accent)" />
+      <span className="inline-flex items-center gap-2 text-sm font-bold text-mute">
         Talking
-      </label>
+        <Switch label="Talking" checked={talking} onChange={setTalking} />
+      </span>
     </div>
   )
 }

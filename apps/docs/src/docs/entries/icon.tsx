@@ -1,10 +1,11 @@
-import { useId, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { ICON_NAMES, Icon } from '@/components/ui/icon'
 import type { IconName } from '@/components/ui/icon'
 import { impactOn, prefersReducedMotion, rand, uiStyle } from '@/fx'
 import { cn } from '@/lib/utils'
+import { Field } from '@/components/ui/field'
 import type { DocEntry } from '../types'
 
 const POP = 'cubic-bezier(.2,1.6,.4,1)'
@@ -32,7 +33,6 @@ function IconBrowser() {
   const [picked, setPicked] = useState<IconName | null>(null)
   const [copied, setCopied] = useState(false)
   const timer = useRef(0)
-  const id = useId()
   const query = q.trim().toLowerCase()
   const shown = query ? ICON_NAMES.filter((n) => n.includes(query)) : ICON_NAMES
 
@@ -52,20 +52,7 @@ function IconBrowser() {
 
   return (
     <div className="grid w-full gap-4">
-      <label htmlFor={id} className="ui-r ui-border flex items-center gap-2.5 bg-paper px-3.5 py-2.5 text-mute focus-within:ui-focus">
-        <Icon name="search" tone="line" size={18} />
-        <span className="sr-only">Search icons</span>
-        <input
-          id={id}
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={`Search ${ICON_NAMES.length} icons`}
-          autoComplete="off"
-          spellCheck={false}
-          className="w-full min-w-0 border-0 bg-transparent p-0 text-[15px] font-semibold text-ink outline-none placeholder:text-mute"
-        />
-      </label>
+      <Field label={`Search ${ICON_NAMES.length} icons`} value={q} onChange={setQ} type="search" />
 
       {shown.length ? (
         <ul aria-label="Icons" className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2 p-0">

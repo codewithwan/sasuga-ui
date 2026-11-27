@@ -234,9 +234,10 @@ export function BarRace({
 
   // pause off screen, pick up where it was when it comes back
   const root = useRef<HTMLDivElement>(null)
+  const ownClock = time === undefined
   useEffect(() => {
     const el = root.current
-    if (!el || time !== undefined) return
+    if (!el || !ownClock) return
     let resume = false
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) {
@@ -249,7 +250,7 @@ export function BarRace({
     })
     io.observe(el)
     return () => io.disconnect()
-  }, [tl, time])
+  }, [tl, ownClock])
 
   /* sizing: fill the frame when the wrapper has a set height, or take a natural height */
   const count = series.length

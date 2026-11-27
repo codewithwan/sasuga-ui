@@ -44,7 +44,8 @@ export function FrameStage({ width, height, maxHeight = '70svh', className, fram
 
   const box: CSSProperties = { width: width * scale, height: height * scale }
   return (
-    <div ref={outer} className={cn('relative grid w-full justify-items-center', className)}>
+    // contain: the scaled frame must never prop its parent open, or a narrowing page keeps the old width
+    <div ref={outer} className={cn('relative grid w-full min-w-0 justify-items-center [contain:inline-size]', className)}>
       {/* measures how tall the frame may get */}
       <div ref={probe} aria-hidden="true" className="pointer-events-none invisible absolute top-0 w-px" style={{ height: maxHeight }} />
       <div className={cn('relative overflow-hidden', frameClassName)} style={box}>

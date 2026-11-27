@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -16,13 +17,10 @@ const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 
 function Range({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
   return (
-    <label className="grid min-w-0 gap-1">
-      <span className="flex items-center justify-between text-xs text-mute">
-        <span>{label}</span>
-        <span className="font-mono tabular-nums">{Math.round(value)}px</span>
-      </span>
-      <input type="range" min={min} max={max} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-[var(--color-accent)]" />
-    </label>
+    <div className="grid min-w-0 gap-0.5">
+      <span className="text-xs font-bold text-mute">{label}</span>
+      <Slider label={label} min={min} max={max} step={1} value={value} onChange={onChange} format={(v) => `${Math.round(v)}px`} ticks={false} maxSfx={false} minSfx={false} className="w-full" />
+    </div>
   )
 }
 

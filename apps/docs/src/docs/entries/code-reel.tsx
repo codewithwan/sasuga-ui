@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { CodeReel, codeReelLength } from '@/components/ui/code-reel'
@@ -12,6 +13,7 @@ import { TimelineScrubber, useTimeline } from '@/components/ui/timeline'
 import { FrameControls } from '@/components/site/FrameControls'
 import { withBase } from '@/data/site'
 import type { DocEntry } from '../types'
+import { Field } from '@/components/ui/field'
 
 const SCRIPT: CodeReelLine[] = [
   { code: 'async function stageClear(koma) {' },
@@ -162,7 +164,7 @@ function SyncedDemo() {
         terminal={[{ tone: 'ok', text: '"Snow Drift" by HoliznaCC0, public domain (CC0)' }]}
         command="play snowDrift.ts"
       />
-      <div className="ui-card flex flex-wrap items-center gap-x-4 gap-y-3 p-3">
+      <div className="ui-card flex flex-wrap items-center gap-x-4 gap-y-3 px-3 pt-7 pb-3">
         <Button
           size="sm"
           variant="accent"
@@ -173,17 +175,20 @@ function SyncedDemo() {
         >
           {state === 'loading' ? 'Loading…' : state === 'playing' ? 'Pause' : state === 'paused' ? 'Play' : 'Play the song'}
         </Button>
-        <input
-          type="range"
-          aria-label="Song position"
+        <Slider
+          label="Song position"
           min={0}
           max={LENGTH}
           step={0.01}
           value={Math.min(time, LENGTH)}
-          onChange={(e) => {
-            if (audio.current) audio.current.currentTime = Number(e.target.value)
+          onChange={(v) => {
+            if (audio.current) audio.current.currentTime = v
           }}
-          className="min-w-[120px] flex-1 accent-[var(--color-accent)]"
+          format={mmss}
+          ticks={false}
+          maxSfx={false}
+          minSfx={false}
+          className="-mt-5 min-w-[140px] flex-1"
         />
         <span className="font-mono text-sm tabular-nums text-mute">
           {mmss(time)} / {mmss(LENGTH)}
@@ -250,20 +255,13 @@ function Playground() {
   return (
     <div className="grid w-full max-w-[720px] gap-4">
       <CodeReel key={run.n} lines={run.lines} skin={skin} chrome="window" file="playground.ts" loop={false} sound={0.45} sounds={SFX} controls />
-      <label className="grid gap-1.5">
-        <span className="text-sm font-bold text-mute">Your script</span>
-        <textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          spellCheck={false}
-          rows={6}
-          className="ui-card resize-y bg-paper p-3 font-mono text-[13px] leading-relaxed text-ink focus-visible:ui-focus"
-        />
+      <div className="grid gap-1.5 [&_textarea]:min-h-40 [&_textarea]:font-mono [&_textarea]:text-[13px]">
+        <Field label="Your script" value={draft} onChange={setDraft} multiline />
         <span className="text-xs leading-relaxed text-mute">
           <code className="font-mono">#!</code> error, <code className="font-mono">#?</code> warning, <code className="font-mono">#+</code> ok, <code className="font-mono">#i</code> info at
           the end of a line; <code className="font-mono">~word</code> opens the autocomplete on that word.
         </span>
-      </label>
+      </div>
       <Menu>
         <ToggleGroup label="Skin" size="sm" sfx={false} value={skin} onValueChange={(v) => setSkin(v as CodeReelSkin)} items={SKIN_ITEMS} />
         <Button size="sm" variant="accent" sfx="Run!" icon={<Icon name="play" tone="line" size={14} />} onClick={() => setRun((r) => ({ n: r.n + 1, lines: parseScript(draft) }))}>

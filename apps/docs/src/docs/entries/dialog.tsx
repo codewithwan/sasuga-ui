@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
+import { Field } from '@/components/ui/field'
 import type { DocEntry } from '../types'
 
 function BasicDemo() {
@@ -32,6 +33,7 @@ function BasicDemo() {
 
 function FormDemo() {
   const [open, setOpen] = useState(false)
+  const [name, setName] = useState('codewithwan')
   return (
     <>
       <Button variant="ink" onClick={() => setOpen(true)}>
@@ -48,13 +50,7 @@ function FormDemo() {
           </Button>
         }
       >
-        <label className="grid gap-2 text-sm font-bold">
-          New codename
-          <input
-            defaultValue="codewithwan"
-            className="ui-border ui-r-sm ui-shadow-sm bg-paper px-3 py-2.5 text-base font-semibold outline-none focus-visible:border-accent"
-          />
-        </label>
+        <Field label="New codename" value={name} onChange={setName} />
       </Dialog>
     </>
   )
@@ -86,7 +82,7 @@ const [open, setOpen] = useState(false)
       preview: <FormDemo />,
       code: `<Dialog open={open} onOpenChange={setOpen} title="Codename" sfx="シャキン"
   footer={<Button variant="accent" sfx="セーブ!" onClick={() => setOpen(false)}>Save</Button>}>
-  <label>New codename <input defaultValue="codewithwan" /></label>
+  <Field label="New codename" value={name} onChange={setName} />
 </Dialog>`,
     },
   ],

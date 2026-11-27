@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import { Chibi } from '@/components/art/mascot'
 import { Icon } from '@/components/ui/icon'
 import { Timeline, TimelineScrubber, at, useTimeline } from '@/components/ui/timeline'
@@ -36,23 +37,12 @@ function ExternalClockDemo() {
         </span>
         <span className="absolute inset-x-0 bottom-0 h-1.5 origin-left bg-accent" style={{ transform: `scaleX(${bar})` }} />
       </div>
-      <label className="grid gap-1.5">
-        <span className="flex items-center justify-between text-sm text-mute">
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="play" size={14} tone="line" /> Video position
-          </span>
-          <span className="font-mono tabular-nums">{time.toFixed(1)}s</span>
+      <div className="grid gap-0.5">
+        <span className="inline-flex items-center gap-1.5 text-sm text-mute">
+          <Icon name="play" size={14} tone="line" /> Video position
         </span>
-        <input
-          type="range"
-          min={0}
-          max={LEN}
-          step={0.05}
-          value={time}
-          onChange={(e) => setTime(Number(e.target.value))}
-          className="w-full accent-[var(--color-accent)]"
-        />
-      </label>
+        <Slider label="Video position" min={0} max={LEN} step={0.05} value={time} onChange={setTime} format={(v) => `${v.toFixed(1)}s`} ticks={6} maxSfx={false} minSfx={false} className="w-full" />
+      </div>
     </div>
   )
 }

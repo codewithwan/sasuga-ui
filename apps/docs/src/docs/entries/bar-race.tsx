@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import { BarRace, barRaceTiming } from '@/components/ui/bar-race'
 import type { BarRaceSeries } from '@/components/ui/bar-race'
 import { FrameControls } from '@/components/site/FrameControls'
@@ -120,22 +121,22 @@ function SliderDemo() {
   return (
     <div className="grid w-full max-w-[640px] gap-3">
       <BarRace data={GUILD} periods={WEEKS} top={6} time={time} loop={false} hold={0} title="Guild classes, by hand" unit="picks" />
-      <label className="ui-card grid gap-2 p-3">
-        <span className="flex items-center justify-between text-sm font-bold text-mute">
-          <span>Drag through the season</span>
-          <span className="font-mono text-ink tabular-nums">{WEEKS[week]}</span>
-        </span>
-        <input
-          type="range"
+      <div className="ui-card grid gap-1 p-3">
+        <span className="text-sm font-bold text-mute">Drag through the season</span>
+        <Slider
+          label="Season position"
           min={0}
           max={timing.duration}
           step={0.01}
           value={time}
-          aria-valuetext={WEEKS[week]}
-          onChange={(e) => setTime(Number(e.target.value))}
-          className="w-full accent-[var(--color-accent)]"
+          onChange={setTime}
+          format={() => WEEKS[week]}
+          ticks={WEEKS.length - 1}
+          maxSfx={false}
+          minSfx={false}
+          className="w-full"
         />
-      </label>
+      </div>
     </div>
   )
 }
@@ -219,7 +220,7 @@ const timing = barRaceTiming(weeks.length, 1.6, 0, false) // period i lands at t
 const [time, setTime] = useState(timing.at(5))
 
 <BarRace data={guild} periods={weeks} top={6} time={time} loop={false} hold={0} />
-<input type="range" min={0} max={timing.duration} step={0.01} value={time} onChange={(e) => setTime(Number(e.target.value))} />`,
+<Slider label="Season" min={0} max={timing.duration} step={0.01} value={time} onChange={setTime} format={() => weekAt(time)} />`,
     },
   ],
   props: [

@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { XRay } from '../xray'
 import { PhoneFrame, Sample } from './sample'
+import { Field } from '@/components/ui/field'
 import type { Part } from './sample'
 
 const PARTS: Part[] = [
@@ -178,17 +179,9 @@ export function Chat() {
         </ol>
 
         <form onSubmit={send} className="ui-divider mt-auto flex items-center gap-2 px-3 pt-3 pb-3.5">
-          <label className="sr-only" htmlFor="uc-chat-input">
-            Message #raid-night
-          </label>
-          <input
-            id="uc-chat-input"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Message #raid-night"
-            autoComplete="off"
-            className="ui-pill ui-border-thin min-w-0 flex-1 bg-paper px-4 py-2.5 text-[14px] text-ink outline-none placeholder:text-mute focus-visible:ui-focus"
-          />
+          <XRay name="Field" slug="field" at="top-left" className="min-w-0 flex-1">
+            <Field label="Message #raid-night" value={draft} onChange={setDraft} />
+          </XRay>
           <XRay name="Button" slug="button" at="top-right">
             <Button type="submit" size="icon" variant="accent" aria-label="Send" sfx="送信!" power={0.6}>
               <Icon name="arrow-right" tone="line" size={20} />

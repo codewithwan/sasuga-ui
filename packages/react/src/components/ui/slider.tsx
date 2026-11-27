@@ -10,7 +10,11 @@ type Props = {
   max?: number
   step?: number
   defaultValue?: number
+  /** Controlled value. When it changes from outside (a playhead, a clock) the knob follows it directly. */
+  value?: number
   onChange?: (value: number) => void
+  /** Text for the value bubble and for screen readers, e.g. (s) => \`\${s}px\`. */
+  format?: (value: number) => string
   /** Tick marks along the track (number of segments). Default: one per step up to 20 steps, else 10. `false` = none. */
   ticks?: number | false
   /** Lettering when the knob slams into the top. `false` = none. */
@@ -68,14 +72,17 @@ type Mode = 'idle' | 'press' | 'drag' | 'key'
  * and lands in a puff of dust while the bubble counts along. Ticks light up as it passes,
  * the ends hit back with lettering, and a fling overshoots and bounces.
  */
-export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30, onChange, ticks, maxSfx = 'MAX!', minSfx = 'ゼロ', className }: Props) {
+export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30, value: controlled, onChange, format, ticks, maxSfx = 'MAX!', minSfx = 'ゼロ', className }: Props) {
   const span = max - min || 1
   const decimals = (String(step).split('.')[1] ?? '').length
   const snapV = (v: number) => clamp(Number((Math.round((v - min) / step) * step + min).toFixed(decimals)), min, max)
   const toP = (v: number) => (v - min) / span
 
-  const [value, setValue] = useState(() => snapV(defaultValue))
+  const [value, setValue] = useState(() => snapV(controlled ?? defaultValue))
   const valueRef = useRef(value)
+  /** True while the value is being moved from outside: no slams, no dashes, just follow. */
+  const outside = useRef(false)
+  const show = (v: number) => (format ? format(v) : v.toFixed(decimals))
   const root = useRef<HTMLDivElement>(null)
   const knobBox = useRef<HTMLSpanElement>(null)
   const knob = useRef<HTMLSpanElement>(null)
@@ -163,7 +170,7 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
         kb.style.transform = `scale(${1 + st - wall}, ${1 - st * 0.45 + wall * 0.75})`
       }
       if (bubbleBox.current) bubbleBox.current.style.transform = `rotate(${clamp(-speed / 80, -18, 18)}deg)`
-      if (readout.current) readout.current.textContent = snapV(min + p * span).toFixed(decimals)
+      if (readout.current) readout.current.textContent = show(snapV(min + p * span))
 
       // afterimages
       const lag = lagged(trail.current, p, now)
@@ -210,7 +217,8 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
       // the ends hit back
       const v = valueRef.current
       if ((edge.current === 'max' && p < 0.97) || (edge.current === 'min' && p > 0.03)) edge.current = null
-      if (p >= 0.999 && v >= max && edge.current !== 'max') {
+      if (outside.current) edge.current = p >= 0.999 ? 'max' : p <= 0.001 ? 'min' : edge.current
+      else if (p >= 0.999 && v >= max && edge.current !== 'max') {
         edge.current = 'max'
         slam(true)
       } else if (p <= 0.001 && v <= min && edge.current !== 'min') {
@@ -232,6 +240,18 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
     return () => ro.disconnect()
   }, [])
   useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  // controlled: an outside change moves the knob straight there (a playhead must not wobble)
+  useEffect(() => {
+    if (controlled === undefined) return
+    const next = clamp(controlled, min, max)
+    if (next === valueRef.current || mode.current === 'drag' || mode.current === 'press') return
+    outside.current = true
+    valueRef.current = next
+    setValue(next)
+    pos.snap({ p: toP(next) })
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- follows the controlled value only; the springs and helpers are stable per render
+  }, [controlled, min, max])
 
   const move = (p: number) => (prefersReducedMotion() ? pos.snap({ p }) : pos.set({ p }))
 
@@ -265,6 +285,7 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
   }
 
   const handle = (next: number) => {
+    outside.current = false
     const prev = valueRef.current
     if (next === prev) return
     const now = performance.now()
@@ -360,6 +381,7 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
         max={max}
         step={step}
         value={value}
+        aria-valuetext={format ? format(value) : undefined}
         className="absolute inset-0 m-0 size-full cursor-grab appearance-none bg-transparent opacity-0 active:cursor-grabbing [&::-moz-range-thumb]:h-16 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:border-0 [&::-webkit-slider-thumb]:h-16 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:appearance-none"
         onKeyDown={() => {
           mode.current = 'key'

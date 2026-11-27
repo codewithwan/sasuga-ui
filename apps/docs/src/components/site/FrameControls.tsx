@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Slider } from '@/components/ui/slider'
 import type { ReactNode } from 'react'
 import { FrameStage } from '@/components/ui/frame-stage'
 import { ToggleGroup } from '@/components/ui/toggle-group'
@@ -13,13 +14,10 @@ type Preset = keyof typeof FRAME_PRESETS | 'custom'
 
 function Size({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
   return (
-    <label className="grid min-w-[140px] flex-1 gap-1">
-      <span className="flex justify-between text-xs font-bold text-mute">
-        {label}
-        <span className="font-mono tabular-nums">{value}px</span>
-      </span>
-      <input type="range" min={320} max={2160} step={10} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full accent-[var(--color-accent)]" />
-    </label>
+    <div className="grid min-w-[140px] flex-1 gap-0.5">
+      <span className="text-xs font-bold text-mute">{label}</span>
+      <Slider label={label} min={320} max={2160} step={10} value={value} onChange={onChange} format={(v) => `${v}px`} ticks={false} maxSfx={false} minSfx={false} className="w-full" />
+    </div>
   )
 }
 

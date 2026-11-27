@@ -294,14 +294,26 @@ export function codeReelLength({ lines, terminal, speed = 16, hold = 0.45 }: Pic
 
 const LINE_H = 1.65 // em
 
-function Code({ segs, n, showSq, tone, skin }: { segs: Seg[]; n: number; showSq: boolean; tone: string; skin: Skin }): ReactNode {
+/** `fresh`: the line being typed; its newest letter fades in instead of popping. */
+function Code({ segs, n, showSq, tone, skin, fresh = false }: { segs: Seg[]; n: number; showSq: boolean; tone: string; skin: Skin; fresh?: boolean }): ReactNode {
   return segs.map((s, k) => {
     if (s.start >= n) return null
     const style: CSSProperties = { color: skin.ink[s.kind], fontStyle: s.kind === 'com' ? 'italic' : undefined, fontWeight: skin.bold?.[s.kind] }
     if (s.sq && showSq) Object.assign(style, { textDecoration: `underline wavy ${tone}`, textDecorationThickness: '0.07em', textUnderlineOffset: '0.22em' })
+    const text = s.text.slice(0, n - s.start)
+    const last = fresh && s.start + text.length === n && text.trim() ? text.length - 1 : -1
     return (
       <span key={k} style={style}>
-        {s.text.slice(0, n - s.start)}
+        {last < 0 ? (
+          text
+        ) : (
+          <>
+            {text.slice(0, last)}
+            <span key={n} className="inline-block animate-[cr-char_.14s_ease-out_both] whitespace-pre">
+              {text.slice(last)}
+            </span>
+          </>
+        )}
       </span>
     )
   })
@@ -430,9 +442,11 @@ export function CodeReel({
   /** Start of the active line's text: with the caret count it gives a camera target that never steps. */
   const lineStart = useRef<HTMLSpanElement>(null)
   const code = useRef<HTMLDivElement>(null)
+  const external = useRef(time !== undefined)
   const want = useRef({ overview, zoom, reduced, caret: 0, line: -1 })
   useEffect(() => {
     want.current = { overview, zoom, reduced, caret, line: started ? active : -1 }
+    external.current = time !== undefined
   })
 
   // sound follows what changed since the last frame; jumps (seeking) stay silent
@@ -524,7 +538,8 @@ export function CodeReel({
         cam.x = target.x
         cam.y = target.y
       } else {
-        const w = wide ? 3 : 5.2
+        // ω 4: the camera trails the caret a little and glides ~1 s between lines instead of snapping back
+        const w = wide ? 3 : 4
         cam.vx += (w * w * (target.x - cam.x) - 2 * w * cam.vx) * dt
         cam.vy += (w * w * (target.y - cam.y) - 2 * w * cam.vy) * dt
         cam.x += cam.vx * dt
@@ -548,7 +563,7 @@ export function CodeReel({
         resumed = false
       } else if (!visible && was) {
         cancelAnimationFrame(raf)
-        if (tl.playing && time === undefined) {
+        if (tl.playing && !external.current) {
           tl.pause()
           resumed = true
         }
@@ -560,7 +575,8 @@ export function CodeReel({
       cancelAnimationFrame(raf)
       io.disconnect()
     }
-  }, [tl, time])
+    // the camera lives for the whole mount: an external clock changes `time` every frame and must not restart it
+  }, [tl])
 
   const text = label ?? lines.map((l) => l.code.trim()).join('\n')
   const blurOf = (i: number) => (reduced || overview ? 0 : Math.min(6, Math.abs(i - active) * 1.5 * depth))
@@ -577,7 +593,7 @@ export function CodeReel({
         className={cn('ui-r relative isolate aspect-video w-full overflow-hidden [perspective:1100px] [perspective-origin:50%_47%]', className)}
         style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)', background: skin.bg }}
       >
-        <style>{'@keyframes cr-chip{from{opacity:0;transform:translateX(-0.6em) scale(.9)}to{opacity:1;transform:none}}@keyframes cr-in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}@keyframes cr-line{from{opacity:0;translate:0 .35em}}'}</style>
+        <style>{'@keyframes cr-chip{from{opacity:0;transform:translateX(-0.6em) scale(.9)}to{opacity:1;transform:none}}@keyframes cr-in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}@keyframes cr-line{from{opacity:0;translate:0 .35em}}@keyframes cr-char{from{opacity:0;filter:blur(.08em);translate:0 .06em}}@keyframes cr-fade{from{opacity:0}}'}</style>
         <div
           ref={plane}
           aria-hidden="true"
@@ -594,13 +610,14 @@ export function CodeReel({
           <div ref={code} className="relative px-[1ch] pt-[0.6em] pb-[1.2em]">
             {started && (
               <div
-                className="absolute inset-x-0 border-y transition-[top] duration-300 ease-out"
+                className="absolute inset-x-0 border-y transition-[top] duration-[450ms] ease-[cubic-bezier(.22,1,.36,1)]"
                 style={{ top: `calc(0.6em + ${active * LINE_H}em)`, height: `${LINE_H}em`, background: skin.band, borderColor: skin.bandEdge }}
               />
             )}
             {started && !overview && (
               <div
-                className="pointer-events-none absolute inset-x-0 flex items-center whitespace-pre opacity-25 blur-[1px] [mask-image:linear-gradient(to_top,black,transparent_85%)]"
+                key={active}
+                className="pointer-events-none absolute inset-x-0 flex animate-[cr-fade_.45s_ease-out_both] items-center whitespace-pre opacity-25 blur-[1px] [mask-image:linear-gradient(to_top,black,transparent_85%)]"
                 style={{ top: `calc(0.6em + ${(active + 1) * LINE_H}em)`, height: `${LINE_H}em`, transform: 'scaleY(-1)' }}
               >
                 <span className="w-[4ch] shrink-0" />
@@ -624,7 +641,7 @@ export function CodeReel({
                     {i + 1}
                   </span>
                   <span ref={i === active ? lineStart : undefined} data-line={i} className="relative">
-                    <Code segs={segs[i]} n={n} showSq={done} tone={skin.tone[d?.tone ?? 'error']} skin={skin} />
+                    <Code segs={segs[i]} n={n} showSq={done} tone={skin.tone[d?.tone ?? 'error']} skin={skin} fresh={i === active && typing && !reduced} />
                     {i === active && (
                       <span ref={cursor} className="relative inline-block h-[1.15em] w-0 align-[-0.2em]">
                         <span

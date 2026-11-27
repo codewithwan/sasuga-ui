@@ -120,11 +120,6 @@
       "tag": "Motion"
     },
     {
-      "title": "Chat replay: cinematic 3D chat for shorts and demos",
-      "status": "done",
-      "tag": "Motion"
-    },
-    {
       "title": "Split flap board: flipping letters for boards and countdowns",
       "status": "done",
       "tag": "Motion"
@@ -141,6 +136,11 @@
     },
     {
       "title": "Code reel: real mechanical keyboard sound and song sync",
+      "status": "done",
+      "tag": "Motion"
+    },
+    {
+      "title": "Lyrics player: now-playing screen, synced lyric sheet with karaoke fill, motion lyrics",
       "status": "done",
       "tag": "Motion"
     }
