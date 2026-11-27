@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { Chibi, MASCOT_NAME, Mascot } from '@/components/art/mascot'
 import type { ChibiPose, MascotExpression } from '@/components/art/mascot'
+import { withBase } from '@/data/site'
 import { cn } from '@/lib/utils'
 import type { DocEntry } from '../types'
 
@@ -70,6 +71,27 @@ function ChibiDemo() {
   )
 }
 
+const ART = ['front', 'three-quarter', 'side', 'back', 'neutral', 'happy', 'surprised', 'wink'] as const
+
+/** The generated character sheet, sliced (see docs/ASSETS.md). */
+function ReferenceArt() {
+  return (
+    <div className="grid w-full grid-cols-4 gap-2 min-[640px]:grid-cols-8">
+      {ART.map((n) => (
+        <img
+          key={n}
+          src={withBase(`/assets/mascot/koma-${n}.webp`)}
+          alt={`${MASCOT_NAME}, ${n.replace('-', ' ')}`}
+          width={768}
+          height={768}
+          loading="lazy"
+          className="h-auto w-full"
+        />
+      ))}
+    </div>
+  )
+}
+
 export default {
   slug: 'mascot',
   name: 'Mascot',
@@ -82,6 +104,13 @@ export default {
 <Mascot expression="wink" talking={isTyping} label={MASCOT_NAME} />
 <Chibi pose="hurt" />`,
   examples: [
+    {
+      title: 'Reference art',
+      preview: <ReferenceArt />,
+      code: `// Raster reference art (docs/ASSETS.md), for READMEs, social cards and 404s.
+// In UI, prefer the SVG <Mascot> / <Chibi>: they follow your theme colours.
+<img src="/assets/mascot/koma-happy.webp" alt="Koma cheering" width={768} height={768} />`,
+    },
     { title: 'Chibi poses', preview: <ChibiDemo />, code: `<Chibi pose="cheer" />  // idle | hurt | cheer | dodge` },
     {
       title: 'Face crop + recolour',

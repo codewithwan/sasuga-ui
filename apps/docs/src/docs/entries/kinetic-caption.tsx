@@ -9,6 +9,8 @@ import { KineticCaption } from '@/components/ui/kinetic-caption'
 import type { KineticCaptionPreset } from '@/components/ui/kinetic-caption'
 import { TimelineScrubber, useTimeline } from '@/components/ui/timeline'
 import { ToggleGroup } from '@/components/ui/toggle-group'
+import { WORD_STYLES } from '@/components/ui/word-tiles'
+import type { WordStyle } from '@/components/ui/word-tiles'
 import type { DocEntry } from '../types'
 
 const SCRIPT: (Cue & { face: MascotExpression })[] = [
@@ -44,6 +46,7 @@ function StageDemo() {
   const [preset, setPreset] = useState<KineticCaptionPreset>('pop')
   const [position, setPosition] = useState<'top' | 'center' | 'bottom'>('bottom')
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md')
+  const [look, setLook] = useState<WordStyle>('plain')
   // calm until played: park on a frame that already shows a caption
   useEffect(() => tl.seek(1.15), [tl])
   const t = tl.time
@@ -56,12 +59,15 @@ function StageDemo() {
           talking={tl.playing && !!line}
           className={`absolute bottom-0 h-[78%] w-auto transition-[left,translate] duration-500 ease-snap ${position === 'center' ? 'left-[4%]' : 'left-1/2 -translate-x-1/2'}`}
         />
-        <KineticCaption cues={SCRIPT} time={t} preset={preset} position={position} size={size} />
+        <KineticCaption cues={SCRIPT} time={t} preset={preset} position={position} size={size} wordStyle={look} />
       </Scene>
       <TimelineScrubber timeline={tl} label="Caption demo" />
       <div className="grid justify-items-center gap-3">
         <div className="max-w-full overflow-x-auto pr-2 pb-2">
           <ToggleGroup label="Preset" size="sm" sfx={false} items={PRESETS} value={preset} onValueChange={(v) => setPreset(v as KineticCaptionPreset)} className="max-w-none" />
+        </div>
+        <div className="max-w-full overflow-x-auto pr-2 pb-2">
+          <ToggleGroup label="Word style" size="sm" sfx={false} items={WORD_STYLES} value={look} onValueChange={(v) => setLook(v as WordStyle)} className="max-w-none" />
         </div>
         <div className="flex flex-wrap justify-center gap-3">
           <ToggleGroup
@@ -208,6 +214,7 @@ const tl = useTimeline({ duration: 7 })
     { name: 'emphasis', type: "'auto' | 'markup' | 'none'", default: "'auto'", description: 'auto: *markup* plus ALL-CAPS words and words ending in "!" (pop colour, bigger, a small shake). markup: only *markup*.' },
     { name: 'uppercase', type: 'boolean', default: 'false', description: 'Set every word in capitals.' },
     { name: 'size', type: "'sm' | 'md' | 'lg'", default: "'md'", description: 'Text scale, relative to the box width.' },
+    { name: 'wordStyle', type: "'plain' | 'block' | 'outline' | 'sticker' | 'split' | 'stamp' | 'tape'", default: "'plain'", description: 'Words as tiles (word-tiles.tsx, shared with Kinetic Type). The spoken word takes the highlighted tile, emphasis the pop one; karaoke wipes the highlighted tile across the word.' },
     { name: 'parseCaptions / parseSRT / parseVTT', type: '(src: string) => Cue[]', description: 'caption-cues.ts. Robust to CRLF, BOM, styling tags, multi-line cues; VTT inline timestamps become per-word timing.' },
     { name: 'splitWords', type: '(cue: Cue) => CueWord[]', description: "caption-cues.ts. The cue's words, or an estimate that shares its time by character length." },
     { name: 'useMediaTime', type: '(ref: RefObject<HTMLMediaElement>) => number', description: "use-media-time.ts. A video or audio element's currentTime as state, every frame while playing." },

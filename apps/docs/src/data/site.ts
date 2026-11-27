@@ -32,6 +32,7 @@ export const GUIDES = [
   { to: '/docs/installation', title: 'Installation', jp: '導入' },
   { to: '/docs/theming', title: 'Theming', jp: 'テーマ' },
   { to: '/docs/motion', title: 'FX & Motion', jp: '動き' },
+  { to: '/docs/embed', title: 'Embed', jp: '埋め込み' },
   { to: '/docs/roadmap', title: 'Roadmap', jp: '予定' },
 ] as const
 

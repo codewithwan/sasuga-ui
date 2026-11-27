@@ -8,11 +8,13 @@ import { Toaster } from '@/components/ui/toaster'
 import { DocPage } from '@/pages/docs/DocPage'
 import { DocsIndex } from '@/pages/docs/DocsIndex'
 import { DocsLayout } from '@/pages/docs/DocsLayout'
+import { Embed } from '@/pages/docs/guides/Embed'
 import { FxMotion } from '@/pages/docs/guides/FxMotion'
 import { Installation } from '@/pages/docs/guides/Installation'
 import { Introduction } from '@/pages/docs/guides/Introduction'
 import { Roadmap } from '@/pages/docs/guides/Roadmap'
 import { Theming } from '@/pages/docs/guides/Theming'
+import { EmbedFx } from '@/pages/embed/EmbedFx'
 import { Home } from '@/pages/Home'
 import { NotFound } from '@/pages/NotFound'
 import { Footer } from '@/sections/Footer'
@@ -42,7 +44,21 @@ function firstLanding() {
   }
 }
 
+/** Embeds (/embed/…) render alone: no nav, footer, intro, wipe or skip link. */
 export default function App() {
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/embed/')) {
+    return (
+      <Routes>
+        <Route path="/embed/fx" element={<EmbedFx />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    )
+  }
+  return <Site />
+}
+
+function Site() {
   const [intro, setIntro] = useState(firstLanding)
   // the page holds its entrance until the intro's cover starts to open
   const [ready, setReady] = useState(!intro)
@@ -77,6 +93,7 @@ export default function App() {
             <Route path="/docs/installation" element={<Installation />} />
             <Route path="/docs/theming" element={<Theming />} />
             <Route path="/docs/motion" element={<FxMotion />} />
+            <Route path="/docs/embed" element={<Embed />} />
             <Route path="/docs/roadmap" element={<Roadmap />} />
             <Route path="/components" element={<DocsIndex />} />
             <Route path="/components/:slug" element={<DocPage />} />

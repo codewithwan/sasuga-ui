@@ -341,7 +341,7 @@ export function Slider({ label, min = 0, max = 100, step = 1, defaultValue = 30,
         <span ref={bubbleBox} className="absolute bottom-[37px] left-0 flex w-0 origin-bottom justify-center">
           <span
             ref={bubble}
-            className="ui-head ui-r-sm relative min-w-9 origin-bottom bg-ink px-2 py-1 text-center text-[13px] leading-none whitespace-nowrap text-paper tabular-nums after:absolute after:top-full after:left-1/2 after:-ml-1 after:border-x-4 after:border-t-[5px] after:border-x-transparent after:border-t-ink"
+            className="ui-head ui-r-sm relative min-w-9 shrink-0 origin-bottom bg-ink px-2 py-1 text-center text-[13px] leading-none whitespace-nowrap text-paper tabular-nums after:absolute after:top-full after:left-1/2 after:-ml-1 after:border-x-4 after:border-t-[5px] after:border-x-transparent after:border-t-ink"
           >
             <span ref={readout} />
           </span>

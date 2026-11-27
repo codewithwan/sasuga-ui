@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="apps/docs/public/assets/hero/koma-impact.webp" alt="Koma, the sasuga/ui mascot, slamming a giant button with an impact burst" width="720" />
+</p>
+
 # sasuga/ui
 
 Game-feel UI components for React. Calm, sticker-like controls at rest — then they squash,
@@ -34,6 +38,18 @@ Same components, `manga` style in dark mode — one attribute, no class changes:
     <td><img src=".github/screenshots/mobile.png" alt="The dialogue box on a phone" /></td>
   </tr>
 </table>
+
+## Meet Koma
+
+The kit's mascot. In the components she's hand-built SVG (`Mascot`, `Chibi`) that follows your theme
+colours; this art is the reference she's drawn from.
+
+<p align="center">
+  <img src="apps/docs/public/assets/mascot/koma-neutral.webp" alt="Koma smiling" width="160" />
+  <img src="apps/docs/public/assets/mascot/koma-happy.webp" alt="Koma cheering" width="160" />
+  <img src="apps/docs/public/assets/mascot/koma-surprised.webp" alt="Koma surprised" width="160" />
+  <img src="apps/docs/public/assets/mascot/koma-wink.webp" alt="Koma winking" width="160" />
+</p>
 
 ## What's in it
 

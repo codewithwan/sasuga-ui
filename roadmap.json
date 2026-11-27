@@ -93,6 +93,21 @@
       "title": "Announcer, lower third, title card, scroll caption",
       "status": "done",
       "tag": "Motion"
+    },
+    {
+      "title": "Kinetic type box: size, align, 7 word-block styles",
+      "status": "done",
+      "tag": "Motion"
+    },
+    {
+      "title": "FX screen + embed builder (iframe, OBS)",
+      "status": "done",
+      "tag": "Motion"
+    },
+    {
+      "title": "Mascot art, key visual and social card",
+      "status": "done",
+      "tag": "Art"
     }
   ]
 }

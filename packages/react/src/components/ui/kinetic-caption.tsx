@@ -5,6 +5,8 @@ import { useTheme } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 import { parseCaptions, splitWords } from './caption-cues'
 import type { Cue } from './caption-cues'
+import { WordTile } from './word-tiles'
+import type { TileTone, WordStyle } from './word-tiles'
 
 export type KineticCaptionPreset = 'karaoke' | 'pop' | 'bounce' | 'stack' | 'slam' | 'typewriter' | 'wave'
 
@@ -23,6 +25,8 @@ export type KineticCaptionProps = {
   emphasis?: 'auto' | 'markup' | 'none'
   uppercase?: boolean
   size?: 'sm' | 'md' | 'lg'
+  /** Words as tiles (word-tiles.tsx): block, outline, sticker, split, stamp, tape. `plain` is outlined caption text. */
+  wordStyle?: WordStyle
   className?: string
 }
 
@@ -106,8 +110,10 @@ export function KineticCaption({
   emphasis = 'auto',
   uppercase = false,
   size = 'md',
+  wordStyle = 'plain',
   className,
 }: KineticCaptionProps) {
+  const tiles = wordStyle !== 'plain'
   const list = useMemo(() => (typeof cues === 'string' ? parseCaptions(cues) : cues), [cues])
   const prepared = useMemo(() => list.map((c) => prepare(c, emphasis, maxWords)), [list, emphasis, maxWords])
   const { style } = useTheme()
@@ -182,7 +188,7 @@ export function KineticCaption({
     const ro = new ResizeObserver(fit)
     ro.observe(host)
     return () => ro.disconnect()
-  }, [rowKey, maxLines, preset, size, uppercase])
+  }, [rowKey, maxLines, preset, size, uppercase, wordStyle])
 
   // slam: an emphasized word that lands during playback gets an impact frame, scaled to the text
   const hitKey = preset === 'slam' && cue && activeWord >= 0 && words[activeWord].hot ? `${ci}:${activeWord}` : ''
@@ -235,7 +241,7 @@ export function KineticCaption({
       const e = still ? 1 : sp(chunkAge - stagger)
       s *= 0.72 + 0.28 * e
       o = still ? 1 : clamp01((chunkAge - stagger) / 0.08)
-    } else if (preset !== 'typewriter') hidden = future
+    } else if (preset !== 'typewriter' || tiles) hidden = future
 
     if (!still && !hidden) {
       const up = (w.hot ? 1.5 : 1) * amp
@@ -266,15 +272,32 @@ export function KineticCaption({
 
     // karaoke colours through its fill overlay; the rest colour the spoken word, and emphasized words stay pop once said
     const tone = preset === 'karaoke' || future ? '' : w.hot ? 'text-pop' : active ? 'text-accent' : ''
-    const wordStyle: CSSProperties = {
+    const tileTone: TileTone = preset === 'karaoke' || future ? 'base' : w.hot ? 'pop' : active ? 'accent' : 'base'
+    const motion: CSSProperties = {
       transform: x || y || s !== 1 ? `translate(${x}em, ${y}em) scale(${s})` : undefined,
       opacity: hidden ? 0 : o * exit,
     }
     let body: ReactNode = w.text
+    let fill: ReactNode = null
 
     if (preset === 'karaoke') {
       const k = future ? 0 : active ? clamp01((time - w.start) / Math.max(0.05, w.end - w.start)) : 1
-      body = (
+      // tiles: a second, highlighted tile wipes over the word left to right
+      if (tiles)
+        fill = (
+          <WordTile
+            aria-hidden="true"
+            look={wordStyle}
+            tone={w.hot ? 'pop' : 'accent'}
+            index={i}
+            className="absolute top-0 left-0 leading-[1.12]"
+            style={{ clipPath: k >= 1 ? 'none' : `inset(-0.5em ${(1 - k) * 100}% -0.5em -0.5em)` }}
+          >
+            {w.text}
+          </WordTile>
+        )
+      else
+        body = (
         <>
           {w.text}
           <span
@@ -317,10 +340,19 @@ export function KineticCaption({
         key={`${ci}-${i}`}
         data-w=""
         data-hit={preset === 'slam' && active && w.hot ? '' : undefined}
-        className={cn('relative mx-[0.1em] inline-block origin-[50%_70%] whitespace-nowrap will-change-transform', tone)}
-        style={wordStyle}
+        className={cn('relative inline-block origin-[50%_70%] whitespace-nowrap will-change-transform', tiles ? 'mx-[0.05em] my-[0.06em]' : ['mx-[0.14em]', tone])}
+        style={motion}
       >
-        {body}
+        {tiles ? (
+          <>
+            <WordTile look={wordStyle} tone={tileTone} index={i} className="block leading-[1.12]">
+              {body}
+            </WordTile>
+            {fill}
+          </>
+        ) : (
+          body
+        )}
       </span>
     )
   }
@@ -331,11 +363,17 @@ export function KineticCaption({
         <div
           ref={box}
           className={cn(
-            'ui-head max-w-full text-center text-paper [text-wrap:balance] [paint-order:stroke_fill] [-webkit-text-stroke:0.17em_var(--color-ink)] [text-shadow:0_0.07em_0_var(--color-ink)]',
-            '[[data-style=flat]_&]:[-webkit-text-stroke:0.13em_var(--color-ink)] [[data-style=flat]_&]:[text-shadow:0_0.06em_0.18em_color-mix(in_srgb,var(--color-ink)_45%,transparent)]',
+            'ui-head max-w-full text-center [text-wrap:balance]',
+            tiles
+              ? 'text-ink'
+              : [
+                  // the outline never thins out on small captions nor turns into a slab on big ones
+                  'text-paper [paint-order:stroke_fill] [-webkit-text-stroke:clamp(3px,0.17em,11px)_var(--color-ink)] [text-shadow:0_max(1.5px,0.07em)_0_var(--color-ink)]',
+                  '[[data-style=flat]_&]:[-webkit-text-stroke:clamp(2.5px,0.13em,8px)_var(--color-ink)] [[data-style=flat]_&]:[text-shadow:0_0.06em_0.18em_color-mix(in_srgb,var(--color-ink)_45%,transparent)]',
+                ],
             uppercase && 'uppercase',
           )}
-          style={{ fontSize: `calc(${SIZE[size]} * var(--fit, 1))`, lineHeight: 1.22 }}
+          style={{ fontSize: `calc(${SIZE[size]} * var(--fit, 1))`, lineHeight: tiles ? 1.5 : 1.22 }}
         >
           {cue &&
             rows.map((row, r) => (

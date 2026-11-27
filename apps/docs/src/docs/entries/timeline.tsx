@@ -17,6 +17,46 @@ const LENGTH = 5
 const easeOut = (p: number) => 1 - (1 - p) ** 3
 const back = (p: number) => 1 + 2.7 * (p - 1) ** 3 + 1.7 * (p - 1) ** 2
 
+/** A stand-in for a <video>: dragging its position drives the timeline through `time`. */
+function ExternalClockDemo() {
+  const LEN = 6
+  const [time, setTime] = useState(1.8)
+  const tl = useTimeline({ duration: LEN, time })
+  const bar = at(tl.time, 0, LEN)
+  const star = at(tl.time, 2, 2.6)
+  const title = at(tl.time, 1, 1.8)
+  return (
+    <div className="grid w-[min(100%,440px)] gap-4">
+      <div className="ui-card relative grid h-36 place-items-center overflow-hidden bg-canvas">
+        <span className="ui-head text-2xl" style={{ opacity: title, transform: `translateY(${(1 - easeOut(title)) * 16}px)` }}>
+          Chapter one
+        </span>
+        <span className="absolute top-4 right-5 text-pop" style={{ transform: `scale(${star ? back(star) : 0})` }}>
+          <Icon name="star" size={28} tone="solid" />
+        </span>
+        <span className="absolute inset-x-0 bottom-0 h-1.5 origin-left bg-accent" style={{ transform: `scaleX(${bar})` }} />
+      </div>
+      <label className="grid gap-1.5">
+        <span className="flex items-center justify-between text-sm text-mute">
+          <span className="inline-flex items-center gap-1.5">
+            <Icon name="play" size={14} tone="line" /> Video position
+          </span>
+          <span className="font-mono tabular-nums">{time.toFixed(1)}s</span>
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={LEN}
+          step={0.05}
+          value={time}
+          onChange={(e) => setTime(Number(e.target.value))}
+          className="w-full accent-[var(--color-accent)]"
+        />
+      </label>
+    </div>
+  )
+}
+
 function SequenceDemo() {
   const tl = useTimeline({ duration: LENGTH })
   const t = tl.time
@@ -122,11 +162,7 @@ const title = at(tl.time, 1.2, 2.4) // 0 → 1 while t runs from 1.2 s to 2.4 s
     },
     {
       title: 'Following a video',
-      preview: (
-        <p className="m-0 max-w-md text-center text-sm text-mute">
-          Pass <code className="font-mono text-ink">time</code> and the timeline mirrors that clock (no loop of its own). See Kinetic Caption for a full video setup.
-        </p>
-      ),
+      preview: <ExternalClockDemo />,
       code: `import { useMediaTime } from '@/components/ui/use-media-time'
 
 const time = useMediaTime(videoRef)

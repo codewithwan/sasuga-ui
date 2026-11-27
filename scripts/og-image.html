@@ -1,17 +1,25 @@
 <!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@500;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<!-- Social preview (1200x630). Rendered with headless Chrome; see scripts/build-icons.sh. -->
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=M+PLUS+Rounded+1c:wght@700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
 <style>
 html,body{margin:0;width:1200px;height:630px;overflow:hidden}
-body{background:#f6f5ff;background-image:radial-gradient(circle,#dcdaf0 1.6px,transparent 1.9px);background-size:22px 22px;font-family:'M PLUS Rounded 1c',sans-serif;color:#1d1a4a;display:grid;place-items:center}
-.card{width:1040px;height:470px;box-sizing:border-box;background:#fff;border:5px solid #1d1a4a;border-radius:34px;box-shadow:14px 16px 0 #b8b3ff;display:grid;grid-template-columns:190px 1fr;align-items:center;gap:44px;padding:0 60px}
-.mark svg{width:190px;height:190px;display:block}
-h1{margin:0;font-family:'Mochiy Pop One';font-weight:400;font-size:92px;line-height:1;letter-spacing:-1px;white-space:nowrap}
+body{background:#f6f5ff;background-image:radial-gradient(circle,#dcdaf0 1.6px,transparent 1.9px);background-size:22px 22px;font-family:'M PLUS Rounded 1c',sans-serif;color:#1d1a4a;position:relative}
+.text{position:absolute;left:64px;top:0;bottom:0;width:520px;display:grid;align-content:center;gap:0}
+.brand{display:flex;align-items:center;gap:18px}
+.brand svg{width:76px;height:76px;display:block}
+h1{margin:0;font-family:'Mochiy Pop One';font-weight:400;font-size:68px;line-height:1;white-space:nowrap}
 h1 span{color:#7a6cff}
-p{margin:22px 0 30px;font-size:34px;font-weight:700;color:#6e6a9c}
-code{display:inline-block;font-family:'JetBrains Mono';font-size:19.5px;white-space:nowrap;background:#24204f;color:#eeecff;border:4px solid #1d1a4a;border-radius:16px;padding:13px 20px;box-shadow:6px 7px 0 #b8b3ff}
+p{margin:22px 0 30px;font-size:31px;line-height:1.25;font-weight:700;color:#6e6a9c}
+code{justify-self:start;font-family:'JetBrains Mono';font-size:21px;background:#24204f;color:#eeecff;border:4px solid #1d1a4a;border-radius:16px;padding:13px 20px;box-shadow:6px 7px 0 #b8b3ff;white-space:nowrap}
 code b{color:#ff5c9a;font-weight:500}
-</style></head><body><div class="card"><div class="mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+.art{position:absolute;right:-70px;top:50%;width:640px;transform:translateY(-46%)}
+</style></head><body>
+<img class="art" src="../apps/docs/public/assets/hero/koma-impact.webp" alt="">
+<div class="text"><div class="brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <path d="M31.00 2.50L37.69 10.40L47.75 7.94L48.52 18.27L58.11 22.19L52.66 31.00L58.11 39.81L48.52 43.73L47.75 54.06L37.69 51.60L31.00 59.50L24.31 51.60L14.25 54.06L13.48 43.73L3.89 39.81L9.34 31.00L3.89 22.19L13.48 18.27L14.25 7.94L24.31 10.40Z" fill="#b8b3ff" transform="translate(2.5 3)" stroke-linejoin="round"/>
   <path d="M31.00 2.50L37.69 10.40L47.75 7.94L48.52 18.27L58.11 22.19L52.66 31.00L58.11 39.81L48.52 43.73L47.75 54.06L37.69 51.60L31.00 59.50L24.31 51.60L14.25 54.06L13.48 43.73L3.89 39.81L9.34 31.00L3.89 22.19L13.48 18.27L14.25 7.94L24.31 10.40Z" fill="#7a6cff" stroke="#1d1a4a" stroke-width="3.5" stroke-linejoin="round"/>
   <path d="M32.00 17.50L36.11 27.84L47.22 28.56L38.66 35.66L41.40 46.44L32.00 40.50L22.60 46.44L25.34 35.66L16.78 28.56L27.89 27.84Z" fill="#fff" stroke="#1d1a4a" stroke-width="3" stroke-linejoin="round"/>
-</svg></div><div><h1>sasuga<span>/ui</span></h1><p>Game-feel UI components for React</p><code><b>$</b> npx sasuga add button</code></div></div></body></html>
+</svg><h1>sasuga<span>/ui</span></h1></div>
+<p>Game-feel UI components<br>for React</p>
+<code><b>$</b> npx sasuga add button</code></div>
+</body></html>
