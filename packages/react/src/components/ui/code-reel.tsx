@@ -281,6 +281,15 @@ function plan(lines: CodeReelLine[], speed: number, hold: number, instant: boole
   return { plans, end: t }
 }
 
+/** Total length in seconds of a reel (typing, holds, terminal and the closing pause), for driving it
+ *  from your own clock or timeline: `useTimeline({ duration: codeReelLength({ lines, terminal }) })`. */
+// oxlint-disable-next-line react/only-export-components -- a helper that belongs with the reel it measures
+export function codeReelLength({ lines, terminal, speed = 16, hold = 0.45 }: Pick<CodeReelProps, 'lines' | 'terminal' | 'speed' | 'hold'>) {
+  const { end } = plan(lines, speed, hold, prefersReducedMotion())
+  const n = terminal?.length ?? 0
+  return n ? end + 0.2 + 0.6 + n * 0.45 + 2.4 : end + 1.6
+}
+
 /* ───────────── Pieces ───────────── */
 
 const LINE_H = 1.65 // em
@@ -559,7 +568,7 @@ export function CodeReel({
   const tex = texture ? TEXTURE[skin.texture] : null
 
   return (
-    <div className="grid w-full gap-3">
+    <div className="grid h-full w-full grid-rows-[minmax(0,1fr)] gap-3 has-[>:nth-child(2)]:grid-rows-[minmax(0,1fr)_auto]">
       <div
         ref={stage}
         role="img"

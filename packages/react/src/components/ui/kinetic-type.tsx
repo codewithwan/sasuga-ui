@@ -372,10 +372,10 @@ export function KineticType({
     const b = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0)
     const bh = (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0)
     let ah = 0
+    // layout sizes, not getBoundingClientRect: a scaled parent (FrameStage, a CSS zoom) must not shrink the measure
     const a = nodes.map((n) => {
-      const r = n.getBoundingClientRect()
-      ah = Math.max(ah, (r.height - bh) / 100)
-      return Math.max(0, (r.width - b) / 100)
+      ah = Math.max(ah, (n.offsetHeight - bh) / 100)
+      return Math.max(0, (n.offsetWidth - b) / 100)
     })
     model.current = { a, b, ah: ah || 1, bh }
   }

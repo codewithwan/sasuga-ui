@@ -1,13 +1,15 @@
 import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { CodeReel } from '@/components/ui/code-reel'
+import { CodeReel, codeReelLength } from '@/components/ui/code-reel'
 import type { CodeReelChrome, CodeReelLine, CodeReelLog, CodeReelSkin, CodeReelSounds, CodeReelTone } from '@/components/ui/code-reel'
 import { unlockReelSound } from '@/components/ui/code-reel-sound'
 import { Icon } from '@/components/ui/icon'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup } from '@/components/ui/toggle-group'
 import { useMediaTime } from '@/components/ui/use-media-time'
+import { TimelineScrubber, useTimeline } from '@/components/ui/timeline'
+import { FrameControls } from '@/components/site/FrameControls'
 import { withBase } from '@/data/site'
 import type { DocEntry } from '../types'
 
@@ -53,9 +55,27 @@ function ReelDemo() {
   const [chrome, setChrome] = useState<CodeReelChrome>('editor')
   const [camera, setCamera] = useState<'follow' | 'static'>('follow')
   const [sound, setSound] = useState(false)
+  const tl = useTimeline({ duration: codeReelLength({ lines: SCRIPT, terminal: LOGS }), autoplay: true, loop: true })
   return (
-    <div className="grid w-full max-w-[720px] gap-4">
-      <CodeReel lines={SCRIPT} terminal={LOGS} file="stageClear.ts" command="bun run stageClear.ts" skin={skin} chrome={chrome} camera={camera} sound={sound} sounds={SFX} controls />
+    <div className="grid w-full max-w-[760px] gap-4">
+      <FrameControls initial="16:9" maxHeight="min(62svh, 560px)">
+        {() => (
+          <CodeReel
+            lines={SCRIPT}
+            terminal={LOGS}
+            file="stageClear.ts"
+            command="bun run stageClear.ts"
+            skin={skin}
+            chrome={chrome}
+            camera={camera}
+            sound={sound}
+            sounds={SFX}
+            time={tl.time}
+            className="aspect-auto h-full rounded-none"
+          />
+        )}
+      </FrameControls>
+      <TimelineScrubber timeline={tl} label="Code reel" />
       <Menu>
         <ToggleGroup label="Skin" size="sm" sfx={false} value={skin} onValueChange={(v) => setSkin(v as CodeReelSkin)} items={SKIN_ITEMS} />
         <ToggleGroup label="Frame" size="sm" sfx={false} value={chrome} onValueChange={(v) => setChrome(v as CodeReelChrome)} items={FRAME_ITEMS} />
