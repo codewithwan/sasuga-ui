@@ -14,8 +14,10 @@ export type InstallSnippetProps = {
   packages?: string
   /** Install as dev dependencies (-D, or -d for bun). */
   dev?: boolean
-  /** 'create' scaffolds a new app from the GitHub template instead of installing packages. */
-  mode?: 'install' | 'create'
+  /** 'cli' runs the kit's CLI (`npx <package> init`); 'install' adds npm packages. */
+  mode?: 'install' | 'cli'
+  /** mode 'cli': what to run, e.g. 'add button'. */
+  command?: string
   className?: string
 }
 
@@ -25,11 +27,11 @@ export type InstallSnippetProps = {
  * unchanged part glides to its new place. The choice is remembered (localStorage) and shared
  * by every snippet on the page.
  */
-export function InstallSnippet({ packages = site.package, dev = false, mode = 'install', className }: InstallSnippetProps) {
+export function InstallSnippet({ packages = site.package, dev = false, mode = 'install', command: cliCommand = 'init', className }: InstallSnippetProps) {
   const manager = usePackageManager()
   const segs =
-    mode === 'create'
-      ? [RUN[manager], 'degit', `${site.repo}/template my-app`]
+    mode === 'cli'
+      ? [RUN[manager], site.package, cliCommand]
       : [manager, dev ? `${VERB[manager]} ${DEV[manager]}` : VERB[manager], packages]
   const command = segs.join(' ')
 

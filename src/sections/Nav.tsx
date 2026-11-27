@@ -44,7 +44,7 @@ export function Nav({ ready }: { ready: boolean }) {
             aria-label={`${site.name} home`}
             className="ui-pill group inline-flex shrink-0 items-center px-2 py-1 text-lg leading-none text-ink no-underline transition duration-200 ease-snap hover:bg-accent-soft focus-visible:ui-focus sm:text-[22px]"
           >
-            <BrandLogo markClassName="transition-transform duration-300 ease-snap group-hover:scale-115" />
+            <BrandLogo word={site.word} suffix={site.suffix} mark={site.mark} markClassName="transition-transform duration-300 ease-snap group-hover:scale-115" />
           </WipeLink>
 
           <div className="flex min-w-0 items-center gap-2">

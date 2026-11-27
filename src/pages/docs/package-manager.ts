@@ -4,7 +4,7 @@ export const MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const
 export type Manager = (typeof MANAGERS)[number]
 
 export const VERB: Record<Manager, string> = { npm: 'i', pnpm: 'add', yarn: 'add', bun: 'add' }
-/** How each manager runs a one-off package (used to scaffold from the template). */
+/** How each manager runs a one-off package (the kit's CLI: `npx <package> add button`). */
 export const RUN: Record<Manager, string> = { npm: 'npx', pnpm: 'pnpm dlx', yarn: 'yarn dlx', bun: 'bunx' }
 export const DEV: Record<Manager, string> = { npm: '-D', pnpm: '-D', yarn: '-D', bun: '-d' }
 

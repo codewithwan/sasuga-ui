@@ -1,8 +1,9 @@
-import { FONTS_LINK, withBase } from '@/data/site'
+import { FONTS_LINK, site, withBase } from '@/data/site'
 import { agentPromptKit } from '@/docs/sources'
 import { CodeBlock, CopyButton } from '../CodeBlock'
 import { InstallSnippet } from '../InstallSnippet'
-import { PM, usePackageManager } from '../package-manager'
+import { RUN, usePackageManager } from '../package-manager'
+import type { Manager } from '../package-manager'
 import { C, Guide, P, Section, Step } from './Guide'
 
 const DEPS = 'class-variance-authority clsx tailwind-merge'
@@ -48,10 +49,35 @@ export default function App() {
   )
 }`
 
-/** "cd, install, run" in whichever package manager is picked above. */
-function RunSteps() {
+/** A fresh Vite + React + TypeScript app, in whichever package manager is picked. */
+const CREATE: Record<Manager, string> = {
+  npm: 'npm create vite@latest my-app -- --template react-ts',
+  pnpm: 'pnpm create vite my-app --template react-ts',
+  yarn: 'yarn create vite my-app --template react-ts',
+  bun: 'bun create vite my-app --template react-ts',
+}
+function NewApp() {
   const pm = usePackageManager()
-  return <CodeBlock code={`cd my-app\n${PM.install(pm)}\n${PM.run(pm, 'dev')}`} />
+  return <CodeBlock code={`${CREATE[pm]}\ncd my-app`} />
+}
+
+/** What init leaves in the project. */
+const CLI_FILES = (() => {
+  const rows = [
+    [`${site.package}.json`, 'where files go + the import alias'],
+    [`src/styles/${site.package}.css`, 'tokens, styles, colours, ui-* utilities'],
+    ['src/lib/utils.ts, theme.ts', 'cn() and the style / colour helpers'],
+    ['src/fx/', 'springs + canvas effects engine'],
+    ['src/components/ui/button.tsx', 'each component you add (+ the kit files it imports)'],
+  ]
+  const w = Math.max(...rows.map(([p]) => p.length)) + 2
+  return rows.map(([p, note]) => `${p.padEnd(w)}# ${note}`).join('\n')
+})()
+
+function CliCommands() {
+  const pm = usePackageManager()
+  const run = `${RUN[pm]} ${site.package}`
+  return <CodeBlock code={`${run} add health-bar gacha-card   # several at once\n${run} add --all                    # everything\n${run} list                         # every component, by category`} />
 }
 
 export function Installation() {
@@ -60,27 +86,33 @@ export function Installation() {
       to="/docs/installation"
       lead={
         <p className="m-0">
-          Two ways in. Start a new app from the starter template (everything already wired up), or copy the files into an existing React 19
-          + Tailwind CSS v4 + TypeScript project. Either way the code is yours.
+          The CLI sets up any React 19 + Tailwind CSS v4 + TypeScript project (Vite or Next.js) and copies in the components you pick. Prefer
+          doing it by hand? Every step is below too. Either way the code is yours.
         </p>
       }
     >
-      <Section id="template" title="New app: use the template">
+      <Section id="cli" title="Use the CLI">
         <P>
-          One command copies the starter (Vite, React, Tailwind v4, every component, the effects engine and the three styles) into a new
-          folder. Then install and run it.
+          <C>init</C> installs the three dependencies, writes <C>{`${site.package}.json`}</C>, copies the core files, imports the
+          stylesheet right after <C>@import 'tailwindcss'</C> and adds the fonts. If Tailwind or the <C>@</C> alias is missing it tells you
+          the exact lines to add.
         </P>
-        <InstallSnippet mode="create" />
-        <RunSteps />
+        <InstallSnippet mode="cli" />
+        <P>Then add components. Each one brings the kit files it imports, and its npm packages are installed in one go.</P>
+        <InstallSnippet mode="cli" command="add button" />
+        <CliCommands />
+        <CodeBlock code={CLI_FILES} title="what you get" lang="text" lineNumbers={false} />
         <P>
-          Prefer clicking? Open the repository on GitHub and press <C>Use this template</C>, or download the ZIP and keep the{' '}
-          <C>template</C> folder.
+          Existing files are kept unless you pass <C>--overwrite</C>. Move the folders or change the alias in{' '}
+          <C>{`${site.package}.json`}</C> and <C>add</C> rewrites the imports to match. <C>--yes</C> skips the prompts.
         </P>
+        <P>Starting from nothing? Create a Vite app first, then run init in it:</P>
+        <NewApp />
       </Section>
 
       <Section id="agent" title="With an AI agent">
         <P>
-          Using Claude Code, Cursor, Copilot or another coding agent? Give it this prompt. For a single component, every component page has a{' '}
+          Using Cursor, Copilot or another coding agent? Give it this prompt. For a single component, every component page has a{' '}
           <C>Copy prompt for your agent</C> button with the exact files. Agents can also read{' '}
           <a href={withBase('/llms.txt')} className="font-bold text-accent">
             llms.txt
@@ -93,8 +125,8 @@ export function Installation() {
         <CodeBlock code={agentPromptKit()} title="prompt.txt" lang="text" lineNumbers={false} />
       </Section>
 
-      <Section id="manual" title="Existing app: copy the files">
-        <P>Add three small dependencies, copy the core files once, then copy any component you want.</P>
+      <Section id="manual" title="By hand: copy the files">
+        <P>What the CLI does, step by step: add three small dependencies, copy the core files once, then copy any component you want.</P>
       </Section>
 
       <ol className="m-0 grid list-none gap-10 p-0">

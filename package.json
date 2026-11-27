@@ -1,17 +1,17 @@
 {
-  "name": "sukasuki-ui",
+  "name": "sasuga-ui",
   "private": true,
   "version": "0.1.0",
-  "description": "Game-feel UI components for React \u2014 springs, impact frames and sound-effect lettering. Copy-paste, three styles, four colours, light and dark.",
+  "description": "Docs site, registry and CLI source for sasuga/ui \u2014 game-feel UI components for React.",
   "license": "MIT",
   "author": "codewithwan",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/codewithwan/sukasuki-ui.git"
+    "url": "git+https://github.com/codewithwan/sasuga-ui.git"
   },
-  "homepage": "https://github.com/codewithwan/sukasuki-ui#readme",
+  "homepage": "https://codewithwan.github.io/sasuga-ui/",
   "bugs": {
-    "url": "https://github.com/codewithwan/sukasuki-ui/issues"
+    "url": "https://github.com/codewithwan/sasuga-ui/issues"
   },
   "keywords": [
     "react",
@@ -31,7 +31,8 @@
     "typecheck": "tsc -b",
     "lint": "oxlint",
     "preview": "vite preview",
-    "template:sync": "node scripts/sync-template.mjs",
+    "registry:build": "node scripts/build-registry.mjs",
+    "cli:build": "node scripts/build-cli.mjs",
     "icons": "bash scripts/build-icons.sh"
   },
   "dependencies": {

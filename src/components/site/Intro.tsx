@@ -23,7 +23,9 @@ import { brand } from '../../../brand.config'
  */
 
 const NAME = site.name
-const WORDS = NAME.split(' ')
+/** The wordmark: word, then the accent suffix. */
+const WORDS = [site.word, site.suffix]
+const FLUSH = site.suffix.startsWith('/')
 const TAGLINE = brand.tagline
 const LETTERS = [...NAME.replace(/ /g, '')].length
 /** A first guess that keeps the wordmark on one line; it is fitted to the screen once the faces load. */
@@ -44,7 +46,7 @@ function fontsReady(ms: number) {
   const weight = cs.getPropertyValue('--ui-font-weight').trim() || '400'
   const loads = [
     fonts.load(`${weight} 40px ${first('--font-display')}`, `${NAME} Click to skip`),
-    ...(site.mark === 'heart' ? [] : [fonts.load(`40px ${first('--font-jp')}`, site.mark)]),
+    ...(site.mark === 'heart' || site.mark === 'star' ? [] : [fonts.load(`40px ${first('--font-jp')}`, site.mark)]),
     fonts.load(`500 16px ${first('--font-sans')}`, `${TAGLINE} Loading`),
   ]
   return Promise.race([Promise.allSettled(loads), new Promise((r) => window.setTimeout(r, ms))])
@@ -256,13 +258,13 @@ export function Intro({ onReveal, onDone }: Props) {
               <div data-i="pop" className="relative grid size-[clamp(64px,13vmin,112px)] place-items-center opacity-0">
                 <Ring flat={flat} />
                 <div data-i="spin" className="w-full">
-                  <BrandMark />
+                  <BrandMark mark={site.mark} />
                 </div>
               </div>
             </div>
 
             <div className="grid justify-items-stretch">
-              <p data-i="name" className="ui-head m-0 flex gap-[0.28em] leading-none whitespace-nowrap" style={{ fontSize: NAME_SIZE }}>
+              <p data-i="name" className={cn('ui-head m-0 flex leading-none whitespace-nowrap', FLUSH ? 'gap-0' : 'gap-[0.28em]')} style={{ fontSize: NAME_SIZE }}>
                 {WORDS.map((word, w) => (
                   <span
                     key={w}

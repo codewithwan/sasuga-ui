@@ -4,8 +4,10 @@ import { Icon } from '@/components/ui/icon'
 import { Tabs } from '@/components/ui/tabs'
 import { agentPrompt, rawUrl } from '@/docs/sources'
 import type { SourceFile } from '@/docs/sources'
+import { site } from '@/data/site'
 import { cn } from '@/lib/utils'
 import { CodeBlock, CopyButton } from './CodeBlock'
+import { InstallSnippet } from './InstallSnippet'
 
 const fileName = (path: string) => path.slice(path.lastIndexOf('/') + 1)
 
@@ -60,11 +62,27 @@ function Manual({ files }: { files: SourceFile[] }) {
   )
 }
 
+function Cli({ slug, files }: { slug: string; files: SourceFile[] }) {
+  return (
+    <div className="grid gap-4">
+      <p className="m-0 text-[15px] leading-relaxed text-mute">
+        One command copies {files.length > 1 ? `the ${files.length} files` : 'the file'} into your project and installs what{' '}
+        {files.length > 1 ? 'they need' : 'it needs'}. First time? Run <code className="font-mono text-ink">{site.package} init</code> once —{' '}
+        <Link to="/docs/installation" className="font-bold text-accent">
+          see Installation
+        </Link>
+        .
+      </p>
+      <InstallSnippet mode="cli" command={`add ${slug}`} />
+    </div>
+  )
+}
+
 function Agent({ prompt }: { prompt: string }) {
   return (
     <div className="grid gap-4">
       <p className="m-0 text-[15px] leading-relaxed text-mute">
-        Using Claude Code, Cursor, Copilot or another coding agent? Paste this prompt — it lists the exact files with raw links, the setup
+        Using Cursor, Copilot or another coding agent? Paste this prompt — it lists the exact files with raw links, the setup
         and the usage.
       </p>
       <div>
@@ -75,7 +93,7 @@ function Agent({ prompt }: { prompt: string }) {
   )
 }
 
-/** "Add it to your project": the full source to copy or download, or a prompt for an AI agent. */
+/** "Add it to your project": the CLI command, the full source to copy or download, or a prompt for an AI agent. */
 export function AddComponent({ slug, name, usage, files }: { slug: string; name: string; usage: string; files: SourceFile[] | null }) {
   if (!files) return <p className="m-0 text-mute">Loading the source…</p>
   if (!files.length) return null
@@ -89,6 +107,7 @@ export function AddComponent({ slug, name, usage, files }: { slug: string; name:
     <Tabs
       label={`Add ${name} to your project`}
       tabs={[
+        { id: 'cli', label: 'CLI', content: <Cli slug={slug} files={files} /> },
         { id: 'manual', label: 'Copy the code', content: <Manual files={files} /> },
         { id: 'agent', label: 'With an AI agent', content: <Agent prompt={prompt} />, sfx: 'エージェント' },
       ]}

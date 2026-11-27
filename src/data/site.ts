@@ -6,8 +6,9 @@ export const site = {
   name: brand.name,
   /** The word before "UI" in the wordmark. */
   word: brand.word,
+  suffix: brand.suffix as string,
   /** Glyph stamped on the logo mark. */
-  mark: brand.mark,
+  mark: brand.mark as string,
   jp: brand.jp,
   tagline: `${brand.tagline} — springs, impact frames and sound-effect lettering.`,
   description:
@@ -15,8 +16,6 @@ export const site = {
   /** npm package name. */
   package: brand.package,
   repo: brand.repo,
-  /** Starts a new app from the template: `npx degit <repo>/template my-app`. */
-  create: `npx degit ${brand.repo}/template my-app`,
   github: brand.github,
   author: brand.author,
 }

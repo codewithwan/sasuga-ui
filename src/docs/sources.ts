@@ -68,6 +68,8 @@ export const docsUrl = (path: string) =>
 export function agentPrompt(name: string, slug: string, files: string[], usage: string) {
   return `Add the "${name}" component from ${site.name} (https://github.com/${site.repo}) to this React + Tailwind CSS v4 + TypeScript project.
 
+If you can run commands, the CLI does steps 1 and 2: \`npx ${site.package} init --yes\` (only once per project), then \`npx ${site.package} add ${slug} --yes\`. Otherwise:
+
 1. Make sure the kit core is set up (skip what already exists):
    - install: class-variance-authority clsx tailwind-merge
    - a "@" path alias pointing at src (vite.config.ts and tsconfig)
@@ -87,8 +89,8 @@ Keep the files as they are: they rely on the ui-* utilities and theme tokens fro
 export function agentPromptKit() {
   return `Set up ${site.name} (https://github.com/${site.repo}), a copy-paste React component kit, in this project.
 
-- New project: run \`npx degit ${site.repo}/template my-app\`, then install and start it.
-- Existing React 19 + Tailwind CSS v4 + TypeScript project: install class-variance-authority clsx tailwind-merge, add a "@" alias to src, then copy from the repo unchanged: src/index.css (or merge its @theme, style and @utility blocks), src/lib/utils.ts, src/lib/theme.ts, src/fx/, and the components you need from src/components/ui/ (with any kit files they import).
+- With the CLI (React 19 + Tailwind CSS v4 + TypeScript, Vite or Next.js): run \`npx ${site.package} init --yes\`, then \`npx ${site.package} add <name...> --yes\` for the components you need (\`npx ${site.package} list\` shows them all). Follow any setup lines init prints (Tailwind, the "@" alias, initTheme).
+- By hand: install class-variance-authority clsx tailwind-merge, add a "@" alias to src, then copy from the repo unchanged: src/index.css (or merge its @theme, style and @utility blocks), src/lib/utils.ts, src/lib/theme.ts, src/fx/, and the components you need from src/components/ui/ (with any kit files they import).
 
 Every component and its raw file URL is listed in ${docsUrl('/llms.txt')}. Installation guide: ${docsUrl('/docs/installation')}`
 }

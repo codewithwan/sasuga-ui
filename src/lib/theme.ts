@@ -109,9 +109,11 @@ function syncMeta() {
 
 /** Call once before the first render so there is no flash of the defaults. */
 export function initTheme() {
-  const theme = load(KEYS.theme)
-  const style = load(KEYS.style)
-  const mode = load(KEYS.mode)
+  // ?style=manga&theme=mint&mode=dark in the URL wins (shareable looks); otherwise the saved choice
+  const q = typeof location === 'undefined' ? null : new URLSearchParams(location.search)
+  const theme = q?.get('theme') ?? load(KEYS.theme)
+  const style = q?.get('style') ?? load(KEYS.style)
+  const mode = q?.get('mode') ?? load(KEYS.mode)
   const prefersDark = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches
   root().dataset.theme = THEMES.some((t) => t.id === theme) ? (theme as ThemeId) : 'lilac'
   root().dataset.style = STYLES.some((s) => s.id === style) ? (style as StyleId) : 'cel'

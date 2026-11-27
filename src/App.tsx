@@ -31,7 +31,9 @@ const INTRO_KEY = 'ui-kit-intro'
 
 /** The title sequence opens the landing page once per session; docs readers land straight on the page. */
 function firstLanding() {
-  if (window.location.pathname !== '/') return false
+  const home = import.meta.env.BASE_URL.replace(/\/$/, '') || ''
+  if (window.location.pathname.replace(/\/$/, '') !== home) return false
+  if (new URLSearchParams(window.location.search).get('intro') === '0') return false
   try {
     return !sessionStorage.getItem(INTRO_KEY)
   } catch {

@@ -1,0 +1,35 @@
+{
+  "name": "sasuga",
+  "version": "0.1.0",
+  "description": "CLI for sasuga/ui: Game-feel UI components for React. Adds components to your React + Tailwind CSS v4 project.",
+  "type": "module",
+  "bin": {
+    "sasuga": "dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "author": "codewithwan",
+  "homepage": "https://codewithwan.github.io/sasuga-ui/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codewithwan/sasuga-ui.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/codewithwan/sasuga-ui/issues"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "components",
+    "tailwindcss",
+    "cli",
+    "game-ui",
+    "animation"
+  ]
+}

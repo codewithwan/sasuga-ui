@@ -10,7 +10,7 @@ export default {
     'A flat band of endlessly scrolling words between sections, outlined top and bottom. Japanese words switch to the Japanese font automatically. Hover it and it pauses, the dots swell and the word under the pointer springs up in the accent colour. Use bleed to run it past the container edges.',
   preview: (
     <div className="w-full overflow-hidden py-6">
-      <Marquee words={['Sukasuki UI', '好き好き', 'Game feel']} />
+      <Marquee words={['sasuga/ui', 'さすが', 'Game feel']} />
     </div>
   ),
   usage: `import { Marquee } from '@/components/ui/marquee'

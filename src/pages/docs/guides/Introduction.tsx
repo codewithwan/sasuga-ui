@@ -64,7 +64,7 @@ export function Introduction() {
 
       <Section id="next" title="Next steps">
         <div className="grid gap-5 min-[640px]:grid-cols-2">
-          <NextCard to="/docs/installation" title="Installation" body="Three dependencies, a few files, then any component." />
+          <NextCard to="/docs/installation" title="Installation" body="One command to set up, one more per component." />
           <NextCard to="/docs/theming" title="Theming" body="Styles, colours and the ui-* token utilities." />
           <NextCard to="/docs/motion" title="FX & Motion" body="impactOn, springs and reduced motion." />
           <NextCard to="/components" title="Components" body={`Browse all ${docs.length} with live previews.`} />

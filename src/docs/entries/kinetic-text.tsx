@@ -18,12 +18,12 @@ export default {
       title: 'Accent word',
       preview: (
         <div className="grid gap-4 text-5xl">
-          <KineticText text="Sukasuki UI kit" seed={0} />
-          <KineticText text="Sukasuki UI kit" seed={2} />
+          <KineticText text="Game feel kit" seed={0} />
+          <KineticText text="Game feel kit" seed={2} />
         </div>
       ),
-      code: `<KineticText text="Sukasuki UI kit" seed={0} />
-<KineticText text="Sukasuki UI kit" seed={2} />`,
+      code: `<KineticText text="Game feel kit" seed={0} />
+<KineticText text="Game feel kit" seed={2} />`,
     },
     {
       title: 'Impact and wave',

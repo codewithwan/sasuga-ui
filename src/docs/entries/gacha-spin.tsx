@@ -84,7 +84,7 @@ export default {
   jp: 'スピン',
   category: 'Game',
   description:
-    'Three ways to roll: GachaWheel (a prize roulette with real coasting: one quick push, then friction slows it at a constant rate until it stops at a random spot inside the winning segment, and stays there; the flapper bends on each peg and springs back, ticking slower as the wheel slows, then the winner lights up and bursts at the pointer), GachaSlots (three symbol strips that scroll, brake left to right and land exactly on their symbol with a small bounce of the strip, and a line that flashes and pays out in coins) and Gachapon (a capsule toy machine: turn the crank a full click-by-click turn, the pile jumps in the glass dome, the flap opens and a capsule drops, bounces twice and rolls to rest on the tray; tap it and it wobbles, the top pops off with a spin and the prize rises out in a fan of light). Each takes a controlled `result` or rolls by weight, reports `onResult`, is busy while it spins, keyboard operable, announces the result, and fades straight to the result under reduced motion.',
+    'Three ways to roll: a prize wheel that coasts to a stop, a three-reel slot machine and a capsule toy machine. Each takes a controlled `result` or rolls by weight, and reports `onResult`.',
   preview: <WheelDemo />,
   usage: `import { GachaWheel, GachaSlots, Gachapon } from '@/components/ui/gacha-spin'
 

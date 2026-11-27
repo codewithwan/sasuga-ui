@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef } from 'react'
 import type { CSSProperties, ReactNode, RefObject, SVGProps } from 'react'
 import { prefersReducedMotion } from '@/fx/engine'
-import { site } from '@/data/site'
 import { cn } from '@/lib/utils'
 import { Chibi, Mascot } from './mascot'
 import type { MascotExpression } from './mascot'
@@ -121,16 +120,20 @@ const TW: CSSProperties = { transformBox: 'fill-box', transformOrigin: 'center' 
 
 /* ───────────── Logo ───────────── */
 
-/** The brand mark (same as the favicon): an impact star with a heart, or with the text
- *  from brand.config.ts `mark` when it is set to anything other than 'heart'. */
-export function BrandMark({ label, className, style, ...rest }: StickerProps) {
+/** The brand mark: an impact star with a heart, or with a short text (`mark`, e.g. '好')
+ *  stamped in its place when `mark` is anything other than 'heart'. */
+export function BrandMark({ mark = 'heart', label, className, style, ...rest }: StickerProps & { mark?: string }) {
   const d = burstPath(32, 32, 30, 30, 10, 0.78, 4)
   return (
     <svg viewBox="0 0 64 64" {...a11y(label)} className={cn('block h-auto w-full overflow-visible', className)} style={style} {...rest}>
       {label && <title>{label}</title>}
       <path d={d} className={DROP} transform="translate(2.5 3)" />
       <path d={d} {...LINE} style={{ fill: FILL.accent, ...lineStyle() }} />
-      {site.mark === 'heart' ? (
+      {mark === 'star' ? (
+        <g data-glyph="">
+          <path d="M32.00 17.50L36.11 27.84L47.22 28.56L38.66 35.66L41.40 46.44L32.00 40.50L22.60 46.44L25.34 35.66L16.78 28.56L27.89 27.84Z" {...LINE} style={{ fill: '#fff', ...lineStyle() }} />
+        </g>
+      ) : mark === 'heart' ? (
         <g data-glyph="">
           <path
             d="M32 44.5C24 39 18.5 33.6 18.5 27.6c0-4.3 3.2-7.4 7.1-7.4 2.7 0 5 1.4 6.4 3.6 1.4-2.2 3.7-3.6 6.4-3.6 3.9 0 7.1 3.1 7.1 7.4 0 6-5.5 11.4-13.5 16.9Z"
@@ -149,20 +152,35 @@ export function BrandMark({ label, className, style, ...rest }: StickerProps) {
           className="text-white"
           style={{ fill: 'currentColor', font: '400 31px var(--font-jp)' }}
         >
-          {site.mark}
+          {mark}
         </text>
       )}
     </svg>
   )
 }
 
-/** Mark + wordmark. The wordmark is real text read from brand.config.ts. */
-export function BrandLogo({ className, markClassName }: { className?: string; markClassName?: string }) {
+/** Mark + wordmark: `word` followed by an accent "UI". The wordmark is real text. */
+export function BrandLogo({
+  word,
+  suffix = 'UI',
+  mark,
+  className,
+  markClassName,
+}: {
+  word: string
+  /** Drawn in the accent colour; a suffix starting with "/" (like "/ui") sits flush against the word. */
+  suffix?: string
+  mark?: string
+  className?: string
+  markClassName?: string
+}) {
   return (
     <span className={cn('ui-head inline-flex items-center gap-[0.35em] leading-none', className)}>
-      <BrandMark className={cn('w-[1.45em] shrink-0', markClassName)} />
+      <BrandMark mark={mark} className={cn('w-[1.45em] shrink-0', markClassName)} />
       <span>
-        {site.word} <span className="text-accent">UI</span>
+        {word}
+        {suffix.startsWith('/') ? '' : ' '}
+        <span className="text-accent">{suffix}</span>
       </span>
     </span>
   )

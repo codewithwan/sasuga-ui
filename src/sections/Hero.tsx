@@ -42,7 +42,14 @@ export function Hero({ ready }: { ready: boolean }) {
         </Reveal>
 
         <h1 id="hero-title" className="ui-head m-0 mt-6 text-[clamp(52px,8.6vw,116px)] leading-[0.92] text-ink">
-          <KineticText text={site.name} seed={1} paused={!ready} />
+          {/* word + accent suffix ("sasuga" + "/ui"); a "/" suffix sits flush against the word */}
+          <KineticText
+            text={`${site.word} ${site.suffix}`}
+            label={site.name}
+            seed={1}
+            paused={!ready}
+            className={site.suffix.startsWith('/') ? 'gap-x-0' : undefined}
+          />
         </h1>
 
         <Reveal show={ready} from="up" delay={450} as="p" className="m-0 mt-5 text-[clamp(19px,2.2vw,26px)] leading-snug font-bold text-mute">
@@ -59,7 +66,7 @@ export function Hero({ ready }: { ready: boolean }) {
         </Reveal>
 
         <Reveal show={ready} from="up" delay={650} className="mt-10 grid w-full max-w-[600px] justify-items-center gap-3.5">
-          <InstallSnippet mode="create" className="w-full text-left" />
+          <InstallSnippet mode="cli" className="w-full text-left" />
           <p className="m-0 text-[14px] leading-snug font-semibold text-mute">
             or{' '}
             <WipeLink

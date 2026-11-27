@@ -2,29 +2,32 @@
  * ─────────────────────────────────────────────────────────────
  *  BRAND CONFIG — change the kit's name here, and only here.
  * ─────────────────────────────────────────────────────────────
- * Everything user-facing reads from this file: the nav logo, the intro,
- * page titles, <title>/<meta> in index.html (injected by vite.config.ts),
- * the footer, install snippets and the docs.
+ * Everything reads from this file: the nav logo, the intro, page titles,
+ * <title>/<meta> in index.html (vite.config.ts), the footer, the docs, llms.txt,
+ * the component registry (/r/*.json) and the CLI (`npm run cli:build`).
+ * After changing it: `npm run cli:build`, `npm run icons` if the mark changed,
+ * and `bash scripts/screenshots.sh` for the README images.
  */
 export const brand = {
-  /** Display name, first word + "UI" are styled separately in the logo. */
-  name: 'Sukasuki UI',
-  /** The word before "UI" (used in the logo wordmark). */
-  word: 'Sukasuki',
-  /** What sits inside the logo mark: 'heart' (matches the favicon) or a short text such as '好'. */
-  mark: 'heart',
+  /** Display name, as written everywhere. */
+  name: 'sasuga/ui',
+  /** The wordmark is `word` + `suffix` (the suffix is drawn in the accent colour). */
+  word: 'sasuga',
+  suffix: '/ui',
+  /** Inside the logo mark: 'star' or 'heart', or a short text such as 'さ'. */
+  mark: 'star',
   /** Short Japanese tag shown next to the name. */
-  jp: '好き好き',
-  /** npm package name (reserved for when it is published). */
-  package: 'sukasuki-ui',
-  /** GitHub "owner/repo". The starter template lives in its /template folder. */
-  repo: 'codewithwan/sukasuki-ui',
+  jp: 'さすが',
+  /** npm package = the CLI command: `npx sasuga add button`. */
+  package: 'sasuga',
+  /** GitHub "owner/repo". */
+  repo: 'codewithwan/sasuga-ui',
   /** One-line pitch, used in <meta name="description"> and the home title. */
   tagline: 'Game-feel UI components for React',
-  /** Live docs site. */
-  docs: 'https://codewithwan.github.io/sukasuki-ui/',
+  /** Live docs site (also hosts the registry at <docs>/r/). */
+  docs: 'https://codewithwan.github.io/sasuga-ui/',
   /** Repository link. */
-  github: 'https://github.com/codewithwan/sukasuki-ui',
+  github: 'https://github.com/codewithwan/sasuga-ui',
   /** Author handle, credited in the footer. */
   author: 'codewithwan',
 } as const

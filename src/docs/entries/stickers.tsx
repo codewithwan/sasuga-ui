@@ -18,6 +18,7 @@ import {
   ToneBlob,
 } from '@/components/art/stickers'
 import type { KomaSceneName } from '@/components/art/stickers'
+import { site } from '@/data/site'
 import type { DocEntry } from '../types'
 
 function Cell({ name, children }: { name: string; children: ReactNode }) {
@@ -57,7 +58,7 @@ function Sheet() {
         <ToneBlob fade={false} outlined className="w-20" />
       </Cell>
       <Cell name="BrandMark">
-        <BrandMark className="w-16" />
+        <BrandMark mark={site.mark} className="w-16" />
       </Cell>
     </div>
   )
@@ -121,7 +122,7 @@ export default {
         <div className="grid w-full max-w-[520px] gap-4 sm:grid-cols-2">
           <div className="ui-r ui-border-thin relative grid h-36 place-items-center overflow-hidden bg-paper">
             <SpeedLines variant="focus" className="absolute inset-0 text-ink opacity-20" />
-            <BrandLogo className="relative text-2xl" />
+            <BrandLogo word={site.word} suffix={site.suffix} mark={site.mark} className="relative text-2xl" />
           </div>
           <div className="ui-r ui-border-thin relative grid h-36 place-items-center overflow-hidden bg-paper">
             <SpeedLines variant="horizontal" className="absolute inset-0 text-accent opacity-30" />
@@ -168,6 +169,7 @@ export default {
     { name: 'animated', type: 'boolean', description: 'SparkleCluster / Sparkle / KomaScene: twinkle and idle life. Always off under reduced motion.' },
     { name: 'scene', type: "'hello' | 'shout' | 'cheer' | 'wink'", default: "'hello'", description: 'KomaScene: which composition. `line` replaces its text.' },
     { name: 'frames', type: 'ReactNode[]', description: 'FilmStrip: one node per frame. Defaults to four Koma keyframes.' },
+    { name: 'word / mark', type: 'string', default: "mark: 'heart'", description: 'BrandLogo: the word before "UI". BrandMark / BrandLogo: \'heart\' draws the heart, any short text (e.g. 好) is stamped instead.' },
     { name: 'label', type: 'string', description: 'Accessible name. Without it the sticker is decorative (aria-hidden).' },
     { name: '...props', type: 'SVGProps<SVGSVGElement>', description: 'SVG stickers pass the rest to the <svg>; size them with a width class (they keep their aspect ratio).' },
   ],

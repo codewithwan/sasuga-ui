@@ -8,7 +8,6 @@ import { GUIDES, site } from '@/data/site'
 import { CATEGORIES } from '@/docs/types'
 
 const LINE = 'Springs · バネ · Impact frames · 衝撃 · Sound effects · 効果音 · '
-const TEMPLATE = `${site.github}/tree/main/template`
 
 const LINK =
   'inline-flex items-center gap-1.5 rounded-sm font-bold text-ink no-underline transition-[color,translate] duration-150 ease-snap hover:translate-x-0.5 hover:text-accent focus-visible:ui-focus'
@@ -49,12 +48,13 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 min-[900px]:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))] min-[900px]:gap-x-10 min-[900px]:py-14">
           <div className="col-span-2 grid content-start gap-4 min-[900px]:col-span-1">
             <WipeLink to="/" label="Home" className="ui-head inline-flex w-max items-baseline gap-2 text-[32px] leading-none text-ink no-underline focus-visible:ui-focus">
-              {site.word}<span className="text-accent">UI</span>
+              {site.word}
+              <span className="text-accent">{site.suffix}</span>
               <span className="font-jp text-xs text-mute">{site.jp}</span>
             </WipeLink>
             <p className="m-0 max-w-[38ch] text-[15px] leading-relaxed text-mute">{site.tagline}</p>
             <p className="ui-pill ui-border-thin m-0 inline-flex w-max max-w-full items-center gap-2 overflow-x-auto bg-paper px-3 py-1.5 font-mono text-[12px] whitespace-nowrap leading-none font-semibold text-ink">
-              <span className="text-accent">npx</span> degit {site.repo}/template
+              <span className="text-accent">npx</span> {site.package} init
             </p>
           </div>
 
@@ -85,7 +85,6 @@ export function Footer() {
               </WipeLink>
             </li>
             <External href={site.github}>GitHub</External>
-            <External href={TEMPLATE}>Starter template</External>
           </Column>
         </div>
 

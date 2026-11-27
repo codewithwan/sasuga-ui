@@ -1,15 +1,16 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import { brand } from './brand.config.ts'
+import { buildRegistry, readEntries } from './scripts/build-registry.mjs'
 
 /** Fills %BRAND_*% placeholders in index.html from brand.config.ts. */
 /**
  * Deploy settings. Locally both are '/'. The GitHub Pages workflow sets
- * BASE_PATH=/sukasuki-ui/ and SITE_URL=https://<user>.github.io/sukasuki-ui/.
+ * BASE_PATH=/<repo>/ and SITE_URL=https://<user>.github.io/<repo>/.
  */
 const BASE = process.env.BASE_PATH ?? '/'
 const SITE_URL = process.env.SITE_URL ?? BASE
@@ -51,7 +52,30 @@ const brandHtml = (): Plugin => {
   }
 }
 
-// https://vite.dev/config/
+/**
+ * /r/index.json + /r/<name>.json — the registry the CLI installs from (scripts/build-registry.mjs).
+ * Served fresh by the dev server, emitted into dist on build.
+ */
+const registry = (): Plugin => {
+  const root = fileURLToPath(new URL('.', import.meta.url))
+  const build = () => buildRegistry({ brand, root })
+  return {
+    name: 'registry',
+    configureServer(server) {
+      server.middlewares.use('/r', (req, res, next) => {
+        const text = build()[(req.url ?? '').split('?')[0].replace(/^\//, '')]
+        if (!text) return next()
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.end(text)
+      })
+    },
+    generateBundle() {
+      for (const [name, source] of Object.entries(build())) this.emitFile({ type: 'asset', fileName: `r/${name}`, source })
+    },
+  }
+}
+
 /**
  * /llms.txt — a plain-text map of the kit for AI coding agents: what it is, how to install it,
  * and every component with its docs page and raw source URL. Generated from src/docs/entries.
@@ -60,19 +84,13 @@ const llmsTxt = (): Plugin => {
   const root = fileURLToPath(new URL('.', import.meta.url))
   const raw = (p: string) => `https://raw.githubusercontent.com/${brand.repo}/main/${p}`
   const text = () => {
-    const dir = `${root}src/docs/entries/`
-    const items = readdirSync(dir)
-      .filter((f) => f.endsWith('.tsx'))
-      .map((f) => {
-        const src = readFileSync(dir + f, 'utf8')
-        const pick = (key: string) =>
-          new RegExp(`${key}:\\s*(['"\`])((?:\\\\.|(?!\\1)[\\s\\S])*?)\\1`).exec(src)?.[2]?.replace(/\\(.)/g, '$1').replace(/\s+/g, ' ').trim() ?? ''
-        const slug = pick('slug')
-        const file = (slug === 'toast' ? 'toaster' : slug) || f.replace('.tsx', '')
+    const items = readEntries(root)
+      .map(({ slug, name, category, description }) => {
+        const file = slug === 'toast' ? 'toaster' : slug
         const path = ['src/components/ui/', 'src/components/art/']
           .flatMap((d) => [`${d}${file}.tsx`, `${d}${file}.ts`])
           .find((p) => existsSync(root + p))
-        return { slug, name: pick('name'), category: pick('category'), description: pick('description'), path }
+        return { slug, name, category, description, path }
       })
       .filter((i) => i.slug)
       .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
@@ -83,8 +101,8 @@ const llmsTxt = (): Plugin => {
       '',
       '## Install',
       '',
-      `- New app: \`npx degit ${brand.repo}/template my-app\`, then install and run.`,
-      `- Existing app: install class-variance-authority clsx tailwind-merge; add an "@" alias to src; copy src/index.css, src/lib/utils.ts, src/lib/theme.ts and src/fx/ from the repo; then copy the components you need from src/components/ui/ (plus any kit file they import).`,
+      `- CLI (recommended), in a React 19 + Tailwind CSS v4 + TypeScript app: \`npx ${brand.package} init\` (installs the deps, writes the core files and the stylesheet import), then \`npx ${brand.package} add button health-bar\` (or \`add --all\`). \`npx ${brand.package} list\` shows every component. The CLI reads the registry at ${SITE_URL}r/index.json (one JSON per component at ${SITE_URL}r/<name>.json with the full file contents).`,
+      `- By hand: install class-variance-authority clsx tailwind-merge; add an "@" alias to src; copy src/index.css, src/lib/utils.ts, src/lib/theme.ts and src/fx/ from the repo; then copy the components you need from src/components/ui/ (plus any kit file they import).`,
       `- Guide: ${SITE_URL}docs/installation`,
       `- Core files: ${raw('src/index.css')} · ${raw('src/lib/utils.ts')} · ${raw('src/lib/theme.ts')} · https://github.com/${brand.repo}/tree/main/src/fx`,
       '',
@@ -95,7 +113,7 @@ const llmsTxt = (): Plugin => {
       '',
       '## Components',
       '',
-      ...items.map((i) => `- [${i.name}](${SITE_URL}components/${i.slug}) (${i.category}) — ${i.description}${i.path ? ` Source: ${raw(i.path)}` : ''}`),
+      ...items.map((i) => `- [${i.name}](${SITE_URL}components/${i.slug}) (${i.category}) — ${i.description} Add: \`npx ${brand.package} add ${i.slug}\`.${i.path ? ` Source: ${raw(i.path)}` : ''}`),
       '',
     ]
     return lines.join('\n')
@@ -116,7 +134,7 @@ const llmsTxt = (): Plugin => {
 
 export default defineConfig({
   base: BASE,
-  plugins: [react(), tailwindcss(), brandHtml(), llmsTxt()],
+  plugins: [react(), tailwindcss(), brandHtml(), llmsTxt(), registry()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
