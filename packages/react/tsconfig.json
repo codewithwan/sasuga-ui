@@ -1,0 +1,28 @@
+{
+  // Type-checks the React package on its own: "@/…" resolves here first, then in packages/core.
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "paths": {
+      "@/fx": ["./src/fx/index.ts"],
+      "@/fx/*": ["./src/fx/*", "../core/src/fx/*"],
+      "@/lib/*": ["./src/lib/*", "../core/src/lib/*"],
+      "@/components/ui": ["./src/components/ui/index.ts"],
+      "@/components/*": ["./src/components/*"]
+    },
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}

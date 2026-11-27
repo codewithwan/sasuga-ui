@@ -1,0 +1,30 @@
+name: Framework port
+description: Help port components to Vue (or request another framework).
+title: "[Port] "
+labels: [port]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The Vue slot lives in `packages/vue` — read `packages/vue/PORTING.md` first.
+        Progress per component is tracked on the [roadmap](https://codewithwan.github.io/sasuga-ui/roadmap).
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options: [Vue, Svelte, Angular, Solid, Other]
+    validations:
+      required: true
+  - type: input
+    id: components
+    attributes:
+      label: Components
+      placeholder: e.g. button, switch, slider (or "all")
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to do this port myself

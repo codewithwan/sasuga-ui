@@ -1,7 +1,12 @@
-// Builds the component registry the CLI installs from: r/index.json (every item) and
-// r/<name>.json (one item with its files' full contents and where they go).
-// Used by vite.config.ts (dev server + build) and runnable on its own:
-//   npm run registry:build            → dist/r
+// Builds the component registry the CLI installs from, for every framework port:
+//   r/index.json + r/<name>.json            React (the default; the CLI 0.1.0 reads these paths)
+//   r/<framework>/index.json + <name>.json  other ports, once roadmap.json marks them preview/available
+//   r/frameworks.json                       every port, its status and which components it has
+// Each item lists its files with their full contents, `path` (where the file lives in this repo)
+// and `type` + `target` (where it goes in the user's project, e.g. ui + button.tsx →
+// src/components/ui/button.tsx).
+// Used by apps/docs/vite.config.ts (dev server + build) and runnable on its own:
+//   npm run registry:build            → apps/docs/dist/r
 //   node scripts/build-registry.mjs out/dir
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -9,7 +14,46 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-/** Category order of the docs sidebar (src/docs/types.ts), then the extra groups. */
+/** Where things live in the repo (root-relative). */
+export const PATHS = {
+  /** The docs app: one page per component in entries/, the fonts in index.html. */
+  docs: 'apps/docs',
+  entries: 'apps/docs/src/docs/entries',
+  html: 'apps/docs/index.html',
+  /** Framework-agnostic core: styles/index.css, lib/, fx/. */
+  core: 'packages/core/src',
+  /** Framework ports, their status and what they need. */
+  roadmap: 'roadmap.json',
+}
+
+/**
+ * How each framework package is laid out. `kit` folders hold the items (one file = one item, or
+ * a docs page's files); `lib` and `fx` overlay the core's folders of the same name (a file with the
+ * same name replaces the core's, e.g. React's fx/index.ts adds useSprings to the barrel).
+ */
+const LAYOUT = {
+  react: {
+    kit: [
+      { dir: 'src/components/ui', type: 'ui' },
+      { dir: 'src/components/art', type: 'art' },
+    ],
+    peers: ['react', 'react-dom'],
+  },
+  vue: {
+    kit: [
+      { dir: 'src/components', type: 'ui' },
+      { dir: 'src/composables', type: 'composable' },
+    ],
+    peers: ['vue'],
+  },
+}
+
+/** The framework whose registry sits at the root of r/ (backward compatible with CLI 0.1.0). */
+export const DEFAULT_FRAMEWORK = 'react'
+/** From these statuses on, a framework's registry is published under r/<id>/. */
+const PUBLISHED = new Set(['preview', 'available'])
+
+/** Category order of the docs sidebar (apps/docs/src/docs/types.ts), then the extra groups. */
 const ORDER = ['Actions', 'Forms', 'Game', 'Feedback', 'Overlay', 'Display', 'Layout', 'Motion', 'Art', 'Hooks']
 
 /** Docs slugs whose main file is named differently, and the extra files that belong to them. */
@@ -18,19 +62,45 @@ const EXTRA = { toast: ['use-toast'] }
 
 /** Core npm dependencies every component needs (cn() and the variants helper). */
 const CORE_DEPS = ['class-variance-authority', 'clsx', 'tailwind-merge']
-/** Peer packages the user's app already has. */
-const PEERS = new Set(['react', 'react-dom'])
 
 const posix = (p) => p.split('\\').join('/')
 const read = (root, p) => readFileSync(join(root, p), 'utf8')
+const isFile = (root, p) => existsSync(join(root, p)) && statSync(join(root, p)).isFile()
+/** 'HealthBar.vue' / 'health-bar.tsx' → 'health-bar'. */
+const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+const stem = (p) => kebab(p.slice(p.lastIndexOf('/') + 1).replace(/\.(tsx?|vue|css)$/, ''))
+const title = (slug) => slug.replace(/(^|-)(\w)/g, (_, d, c) => (d ? ' ' : '') + c.toUpperCase())
 
-/** Docs entries (src/docs/entries/*.tsx): slug, name, category, description, read without running them. */
+/** The kanban cards from roadmap.json (shown on the docs roadmap page). */
+function readBoard(root = ROOT) {
+  return JSON.parse(read(root, PATHS.roadmap)).board ?? []
+}
+
+/** The framework ports from roadmap.json: [{ id, title, status, package, requires, inProgress }]. */
+export function readFrameworks(root = ROOT) {
+  const { frameworks } = JSON.parse(read(root, PATHS.roadmap))
+  return frameworks.map((f) => ({ inProgress: [], ...f }))
+}
+
+/** All files of a folder, recursively, as root-relative posix paths ([] when it does not exist). */
+function walk(root, dir, re = /\.(tsx?|vue|css)$/) {
+  if (!existsSync(join(root, dir))) return []
+  const out = []
+  for (const name of readdirSync(join(root, dir)).sort()) {
+    const p = `${dir}/${name}`
+    if (statSync(join(root, p)).isDirectory()) out.push(...walk(root, p, re))
+    else if (re.test(name)) out.push(p)
+  }
+  return out
+}
+
+/** Docs entries (apps/docs/src/docs/entries/*.tsx): slug, name, category, description, read without running them. */
 export function readEntries(root = ROOT) {
-  const dir = join(root, 'src/docs/entries')
-  // `${MASCOT_NAME}` style placeholders → the string constant a kit file exports
+  const dir = join(root, PATHS.entries)
+  // `${MASCOT_NAME}` style placeholders → the string constant a React kit file exports
   const consts = {}
-  for (const p of [...walk(root, 'src/components/ui'), ...walk(root, 'src/components/art')])
-    for (const m of read(root, p).matchAll(/export const (\w+) = '([^'\n]*)'/g)) consts[m[1]] = m[2]
+  for (const { dir: d } of LAYOUT.react.kit)
+    for (const p of walk(root, `packages/react/${d}`)) for (const m of read(root, p).matchAll(/export const (\w+) = '([^'\n]*)'/g)) consts[m[1]] = m[2]
   return readdirSync(dir)
     .filter((f) => f.endsWith('.tsx'))
     .map((f) => {
@@ -42,17 +112,6 @@ export function readEntries(root = ROOT) {
       return { slug: pick('slug'), name: pick('name'), category: pick('category'), description: pick('description') }
     })
     .filter((e) => e.slug)
-}
-
-/** All files of a folder, recursively, as root-relative posix paths. */
-function walk(root, dir) {
-  const out = []
-  for (const name of readdirSync(join(root, dir)).sort()) {
-    const p = `${dir}/${name}`
-    if (statSync(join(root, p)).isDirectory()) out.push(...walk(root, p))
-    else if (/\.(tsx?|css)$/.test(name)) out.push(p)
-  }
-  return out
 }
 
 /** Module specifiers a file imports (static imports, re-exports and dynamic import()). */
@@ -69,23 +128,10 @@ function packageOf(spec) {
   return spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]
 }
 
-/** Resolves a local import to a kit file path (root-relative), or null. */
-function resolveLocal(root, from, spec) {
-  let base = null
-  if (spec.startsWith('@/')) base = `src/${spec.slice(2)}`
-  else if (spec.startsWith('.')) base = posix(join(dirname(from), spec))
-  if (!base) return null
-  for (const ext of ['.tsx', '.ts', '/index.ts', '/index.tsx', '']) {
-    const p = base + ext
-    if (existsSync(join(root, p)) && statSync(join(root, p)).isFile()) return p
-  }
-  return null
-}
-
 /** A one-line description for items without a docs page: the doc comment of the export named
  *  after the file (use-combo → useCombo, monster → Monster), else the file's leading comment. */
-function describe(code, stem) {
-  const camel = stem.replace(/-(\w)/g, (_, c) => c.toUpperCase())
+function describe(code, name) {
+  const camel = name.replace(/-(\w)/g, (_, c) => c.toUpperCase())
   const pascal = camel[0].toUpperCase() + camel.slice(1)
   const block = (re) => re.exec(code)?.[1]
   const raw =
@@ -103,11 +149,9 @@ function describe(code, stem) {
   return /^(.{20,240}?\.)(\s|$)/.exec(text)?.[1] ?? text
 }
 
-const title = (slug) => slug.replace(/(^|-)(\w)/g, (_, d, c) => (d ? ' ' : '') + c.toUpperCase())
-
-/** The Google Fonts <link> tags from index.html (preconnects + stylesheet). */
+/** The Google Fonts <link> tags from the docs index.html (preconnects + stylesheet). */
 function fontsSnippet(root) {
-  const html = read(root, 'index.html')
+  const html = read(root, PATHS.html)
   const links = html.match(/<link\b[^>]*fonts\.(?:googleapis|gstatic)\.com[\s\S]*?\/>/g) ?? []
   const pretty = links.map((l) => l.replace(/\s*\n\s*/g, ' ').replace(/\s+\/>$/, ' />').trim())
   const href = /href="(https:\/\/fonts\.googleapis\.com\/css2[^"]+)"/.exec(html)?.[1] ?? ''
@@ -115,23 +159,45 @@ function fontsSnippet(root) {
 }
 
 /**
- * Builds every registry document.
- * @param {{ brand: { name: string, package: string, docs: string }, root?: string, version?: string }} opts
- * @returns {Record<string, string>} file name (relative to r/) → JSON text
+ * Every kit file of one framework, with where it goes: { path, type, target }.
+ * The core (css, lib/, fx/) comes first, with the framework's lib/ and fx/ files laid over it.
  */
-export function buildRegistry({ brand, root = ROOT, version }) {
-  const pkgVersion = version ?? JSON.parse(read(root, 'package.json')).version
-  const entries = new Map(readEntries(root).map((e) => [e.slug, e]))
+export function kitFiles(root, framework) {
+  const pkg = `packages/${framework}/src`
+  const core = [{ path: `${PATHS.core}/styles/index.css`, type: 'css', target: 'index.css' }]
+  for (const kind of ['lib', 'fx']) {
+    const byTarget = new Map()
+    for (const base of [`${PATHS.core}/${kind}`, `${pkg}/${kind}`]) for (const p of walk(root, base, /\.ts$/)) byTarget.set(posix(relative(base, p)), p)
+    for (const [target, path] of [...byTarget].sort(([a], [b]) => a.localeCompare(b))) core.push({ path, type: kind, target })
+  }
+  const kit = LAYOUT[framework].kit.flatMap(({ dir, type }) =>
+    walk(root, `packages/${framework}/${dir}`)
+      .filter((p) => !/\/index\.ts$/.test(p))
+      .map((path) => ({ path, type, target: posix(relative(`packages/${framework}/${dir}`, path)) })),
+  )
+  return { core, kit }
+}
 
-  // every kit file → the item that ships it
-  const kitFiles = [...walk(root, 'src/components/ui'), ...walk(root, 'src/components/art')].filter((p) => !/\/index\.ts$/.test(p))
-  const stem = (p) => p.slice(p.lastIndexOf('/') + 1).replace(/\.(tsx?|css)$/, '')
+/** Resolves a local import to a kit file path (root-relative), or null: "@/x" → the framework package first, then the core. */
+function resolveLocal(root, framework, from, spec) {
+  let bases = []
+  if (spec.startsWith('@/')) bases = [`packages/${framework}/src/${spec.slice(2)}`, `${PATHS.core}/${spec.slice(2)}`]
+  else if (spec.startsWith('.')) bases = [posix(join(dirname(from), spec))]
+  for (const base of bases)
+    for (const ext of ['.tsx', '.ts', '.vue', '/index.ts', '/index.tsx', '']) {
+      const p = base + ext
+      if (isFile(root, p)) return p
+    }
+  return null
+}
+
+/** The registry items of one framework: Map name → { meta, files }. */
+function buildItems({ root, framework, entries }) {
+  const { core, kit } = kitFiles(root, framework)
   const owner = new Map() // path → item name
-  const items = new Map() // name → { meta, paths }
+  const items = new Map() // name → { meta, files }
 
-  // core: tokens + utilities stylesheet, cn(), theme helpers, the effects engine
-  const corePaths = ['src/index.css', 'src/lib/utils.ts', 'src/lib/theme.ts', ...walk(root, 'src/fx')]
-  corePaths.forEach((p) => owner.set(p, 'core'))
+  core.forEach((f) => owner.set(f.path, 'core'))
   items.set('core', {
     meta: {
       name: 'core',
@@ -140,66 +206,56 @@ export function buildRegistry({ brand, root = ROOT, version }) {
       category: 'Core',
       description: 'Design tokens, the three styles and four colours, ui-* utilities, cn(), theme helpers and the FX engine. Every component needs it.',
     },
-    paths: corePaths,
+    files: core,
   })
 
   // docs pages first (slug = docs slug), then the files no page owns (hooks, extra art)
   for (const [slug, e] of entries) {
     const main = ALIAS[slug] ?? slug
-    const paths = [main, ...(EXTRA[slug] ?? [])].map((s) => kitFiles.find((p) => stem(p) === s)).filter(Boolean)
-    if (!paths.length) continue
-    paths.forEach((p) => owner.set(p, slug))
-    const type = paths[0].includes('/art/') ? 'art' : 'ui'
-    items.set(slug, { meta: { name: slug, title: e.name, type, category: e.category, description: e.description, docs: `components/${slug}` }, paths })
+    const files = [main, ...(EXTRA[slug] ?? [])].map((s) => kit.find((f) => stem(f.path) === s)).filter(Boolean)
+    if (!files.length) continue
+    files.forEach((f) => owner.set(f.path, slug))
+    items.set(slug, { meta: { name: slug, title: e.name, type: files[0].type, category: e.category, description: e.description, docs: `components/${slug}` }, files })
   }
-  for (const p of kitFiles) {
-    if (owner.has(p)) continue
-    const name = stem(p)
-    const art = p.includes('/art/')
-    const hook = !art && p.endsWith('.ts')
-    owner.set(p, name)
+  for (const f of kit) {
+    if (owner.has(f.path)) continue
+    const name = stem(f.path)
+    const art = f.type === 'art'
+    const hook = f.type === 'composable' || (!art && f.path.endsWith('.ts'))
+    owner.set(f.path, name)
     items.set(name, {
-      meta: { name, title: title(name), type: art ? 'art' : hook ? 'hook' : 'ui', category: art ? 'Art' : hook ? 'Hooks' : 'Display', description: describe(read(root, p), name) },
-      paths: [p],
+      meta: { name, title: title(name), type: art ? 'art' : hook ? 'hook' : 'ui', category: art ? 'Art' : hook ? 'Hooks' : 'Display', description: describe(read(root, f.path), name) },
+      files: [f],
     })
   }
+  return { items, owner }
+}
 
-  const typeOf = (p) =>
-    p === 'src/index.css'
-      ? 'css'
-      : p.startsWith('src/lib/')
-        ? 'lib'
-        : p.startsWith('src/fx/')
-          ? 'fx'
-          : p.startsWith('src/components/art/')
-            ? 'art'
-            : 'ui'
-  const targetOf = (p) =>
-    p === 'src/index.css'
-      ? `${brand.package.replace(/^@[^/]+\//, '')}.css`
-      : posix(relative({ lib: 'src/lib', fx: 'src/fx', art: 'src/components/art', ui: 'src/components/ui' }[typeOf(p)], p))
-
+/** One framework's registry documents (file name relative to its folder → JSON text). */
+function buildFramework({ brand, root, version, framework, entries }) {
+  const { items, owner } = buildItems({ root, framework, entries })
+  const peers = new Set(LAYOUT[framework].peers)
   const docs = {}
   const index = []
-  for (const { meta, paths } of items.values()) {
+  for (const { meta, files: list } of items.values()) {
     const deps = new Set(meta.name === 'core' ? CORE_DEPS : [])
     const reg = new Set(meta.name === 'core' ? [] : ['core'])
-    const files = paths.map((p) => {
-      let content = read(root, p)
+    const files = list.map(({ path, type, target }) => {
+      let content = read(root, path)
       // the user's own stylesheet imports Tailwind; ours is imported right after it
-      if (p === 'src/index.css') content = content.replace(/^@import\s+['"]tailwindcss['"];?[ \t]*\r?\n(\r?\n)?/m, '')
+      if (type === 'css') content = content.replace(/^@import\s+['"]tailwindcss['"];?[ \t]*\r?\n(\r?\n)?/m, '')
       for (const spec of specifiers(content)) {
         const pkg = packageOf(spec)
         if (pkg) {
-          if (!PEERS.has(pkg)) deps.add(pkg)
+          if (!peers.has(pkg)) deps.add(pkg)
           continue
         }
-        const local = resolveLocal(root, p, spec)
+        const local = resolveLocal(root, framework, path, spec)
         const dep = local && owner.get(local)
         if (dep && dep !== meta.name) reg.add(dep)
-        if (spec.startsWith('@/') && !local) throw new Error(`${p}: "${spec}" is not a kit file — kit files may only import other kit files`)
+        if (spec.startsWith('@/') && !local) throw new Error(`${path}: "${spec}" is not a kit file — kit files may only import other kit files`)
       }
-      return { path: p, type: typeOf(p), target: targetOf(p), content }
+      return { path, type, target: type === 'css' ? `${brand.package.replace(/^@[^/]+\//, '')}.css` : target, content }
     })
     const item = {
       ...meta,
@@ -210,23 +266,64 @@ export function buildRegistry({ brand, root = ROOT, version }) {
     docs[`${meta.name}.json`] = JSON.stringify({ ...item, files }, null, 2)
     index.push({ ...item, files: files.map((f) => f.path) })
   }
-
   index.sort((a, b) => (a.name === 'core' ? -1 : b.name === 'core' ? 1 : ORDER.indexOf(a.category) - ORDER.indexOf(b.category) || a.title.localeCompare(b.title)))
-  docs['index.json'] = JSON.stringify({ name: brand.name, package: brand.package, version: pkgVersion, docs: brand.docs, items: index }, null, 2)
-  return docs
+  const head = { name: brand.name, package: brand.package, version, docs: brand.docs }
+  docs['index.json'] = JSON.stringify(framework === DEFAULT_FRAMEWORK ? { ...head, items: index } : { ...head, framework, items: index }, null, 2)
+  return { docs, names: index.filter((i) => i.name !== 'core').map((i) => i.name) }
 }
 
-/** Writes the registry into `out` (default dist/r). */
+/**
+ * Builds every registry document.
+ * @param {{ brand: { name: string, package: string, docs: string }, root?: string, version?: string }} opts
+ * @returns {Record<string, string>} file name (relative to r/) → JSON text
+ */
+export function buildRegistry({ brand, root = ROOT, version }) {
+  const pkgVersion = version ?? JSON.parse(read(root, 'package.json')).version
+  const entries = new Map(readEntries(root).map((e) => [e.slug, e]))
+  const docsBase = brand.docs.endsWith('/') ? brand.docs : `${brand.docs}/`
+  const out = {}
+  const frameworks = []
+  for (const fw of readFrameworks(root)) {
+    if (!LAYOUT[fw.id]) throw new Error(`${PATHS.roadmap}: no layout for "${fw.id}" in scripts/build-registry.mjs (LAYOUT)`)
+    const isDefault = fw.id === DEFAULT_FRAMEWORK
+    const published = isDefault || PUBLISHED.has(fw.status)
+    const { docs, names } = buildFramework({ brand, root, version: pkgVersion, framework: fw.id, entries })
+    if (published) for (const [name, text] of Object.entries(docs)) out[isDefault ? name : `${fw.id}/${name}`] = text
+    frameworks.push({
+      id: fw.id,
+      title: fw.title,
+      status: fw.status,
+      requires: fw.requires,
+      package: fw.package,
+      /** Folder of this framework's registry, relative to r/ ('' = r/ itself), or null while unpublished. */
+      registry: published ? (isDefault ? '' : `${fw.id}/`) : null,
+      /** Registry items this port has (components, hooks/composables, art). */
+      components: names,
+      /** Items someone is porting right now (roadmap.json). */
+      inProgress: fw.inProgress.filter((n) => !names.includes(n)),
+    })
+  }
+  out['frameworks.json'] = JSON.stringify(
+    { name: brand.name, package: brand.package, version: pkgVersion, docs: brand.docs, roadmap: `${docsBase}roadmap`, default: DEFAULT_FRAMEWORK, frameworks, board: readBoard(root) },
+    null,
+    2,
+  )
+  return out
+}
+
+/** Writes the registry into `out` (default apps/docs/dist/r). */
 export function writeRegistry(out, opts) {
-  mkdirSync(out, { recursive: true })
   const docs = buildRegistry(opts)
-  for (const [name, text] of Object.entries(docs)) writeFileSync(join(out, name), `${text}\n`)
+  for (const [name, text] of Object.entries(docs)) {
+    mkdirSync(dirname(join(out, name)), { recursive: true })
+    writeFileSync(join(out, name), `${text}\n`)
+  }
   return Object.keys(docs).length
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const { brand } = await import(pathToFileURL(join(ROOT, 'brand.config.ts')).href)
-  const out = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, 'dist/r')
+  const out = process.argv[2] ? resolve(process.argv[2]) : join(ROOT, PATHS.docs, 'dist/r')
   const n = writeRegistry(out, { brand })
   console.log(`registry: ${n} files → ${posix(relative(process.cwd(), out)) || '.'}`)
 }

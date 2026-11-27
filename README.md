@@ -60,22 +60,40 @@ npx sasuga add button         # one or more components · or: add --all
 npx sasuga list               # every component, by category
 ```
 
-`init` writes `sasuga.json` (where files go and the import alias). `add` copies each component with
-the kit files it needs and installs its npm packages. The registry is generated from this repo and
-served with the docs (`/r/index.json`, `/r/<name>.json`).
+`init` writes `sasuga.json` (where files go, the import alias, `"framework": "react"`). `add` copies
+each component with the kit files it needs and installs its npm packages. The registry is generated
+from this repo and served with the docs (`/r/index.json`, `/r/<name>.json`, and `/r/frameworks.json`
+for the framework ports).
+
+**Vue and other frameworks:** React only for now. A Vue port has its slot in `packages/vue`; the CLI
+recognises Vue projects and points them at the [roadmap](https://codewithwan.github.io/sasuga-ui/roadmap).
+Want to help? See [`packages/vue/PORTING.md`](packages/vue/PORTING.md).
 
 ### By hand
 
 1. `npm i class-variance-authority clsx tailwind-merge`
 2. Set up Tailwind v4 and an `@` alias to `src`.
-3. Copy the core: `src/index.css`, `src/lib/utils.ts`, `src/lib/theme.ts`, `src/fx/`.
-4. Copy the components you want from `src/components/ui/`. Every docs page shows the full source
-   and the files it needs ([Installation guide](https://codewithwan.github.io/sasuga-ui/docs/installation)).
+3. Copy the core into `src/`: `packages/core/src/styles/index.css` → `src/index.css`,
+   `packages/core/src/{lib,fx}/` → `src/lib/`, `src/fx/`, then the React adapters
+   `packages/react/src/{lib,fx}/` on top (they replace `fx/index.ts` and `lib/theme.ts` and add
+   `useSprings` / `useTheme`). [`llms.txt`](https://codewithwan.github.io/sasuga-ui/llms.txt) lists every
+   file with its destination.
+4. Copy the components you want from `packages/react/src/components/ui/` to `src/components/ui/`.
+   Every docs page shows the full source and the files it needs
+   ([Installation guide](https://codewithwan.github.io/sasuga-ui/docs/installation)).
 
 ### With an AI agent
 
 Every component page has a **Copy prompt for your agent** button with the exact files and raw links,
 and [`llms.txt`](https://codewithwan.github.io/sasuga-ui/llms.txt) maps the whole kit.
+
+## Roadmap & requests
+
+The [roadmap](https://codewithwan.github.io/sasuga-ui/roadmap) shows the board (planned / in progress / done),
+each framework's port progress and the most-wanted requests.
+[Request a component](https://github.com/codewithwan/sasuga-ui/issues/new?template=component-request.yml) ·
+[Help port to Vue](https://github.com/codewithwan/sasuga-ui/issues/new?template=framework-port.yml) ·
+[Report a bug](https://github.com/codewithwan/sasuga-ui/issues/new?template=bug-report.yml)
 
 ## Theming
 
@@ -89,30 +107,49 @@ and [`llms.txt`](https://codewithwan.github.io/sasuga-ui/llms.txt) maps the whol
 | `data-theme` | `lilac` · `mint` · `peach` · `sky` | accent colours                             |
 | `data-mode`  | `light` · `dark`                   | surfaces                                   |
 
-`useTheme()` / `initTheme()` in `src/lib/theme.ts` switch and remember them. Any docs URL also takes
+`useTheme()` / `initTheme()` from `@/lib/theme` switch and remember them. Any docs URL also takes
 `?style=manga&theme=mint&mode=dark`. Contributor rules: [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## This repository
 
+npm workspaces, one lockfile, one root `node_modules`:
+
 ```
-brand.config.ts       name, package, links — rebrand everything from here
-src/components/ui     the kit, one file per component
-src/components/art    mascot "Koma", stickers, logo
-src/fx                springs + canvas effects engine
-src/index.css         tokens, styles, colours, ui-* utilities
-src/docs/entries      one docs page per component
-cli/                  the `sasuga` CLI (generated package.json from brand.config.ts)
-scripts/              registry, CLI build, icons, README screenshots
+brand.config.ts              name, package, links — rebrand everything from here
+roadmap.json                 framework ports and their status (→ /r/frameworks.json, /docs/roadmap)
+apps/docs/                   the docs site (Vite): pages, live demos, registry + llms.txt plugins
+  src/docs/entries/          one docs page per component
+  public/                    favicons, og-image
+packages/core/src/           framework-agnostic, no React import
+  styles/index.css           tokens, styles, colours, ui-* utilities
+  fx/                        canvas effects engine, springs (createSpring), impacts
+  lib/                       cn(), theme store (theme-core.ts)
+packages/react/src/          React 19
+  components/ui/             the kit, one file per component
+  components/art/            mascot "Koma", stickers, monster
+  fx/, lib/                  useSprings, useTheme and the `@/fx`, `@/lib/theme` entry files
+packages/vue/                the Vue 3 port — not started, see PORTING.md
+cli/                         the `sasuga` CLI (generated package.json from brand.config.ts)
+scripts/                     registry, CLI build, icons, README screenshots
+docs/DESIGN.md               design rules for every port
 ```
 
-| Script                       | Does                                                      |
-| ---------------------------- | --------------------------------------------------------- |
-| `npm run dev`                | docs site (+ registry at `/r/`) on localhost              |
-| `npm run build`              | type-check + production build (site + registry)           |
-| `npm run lint`               | oxlint                                                    |
-| `npm run cli:build`          | build the CLI package from `brand.config.ts`              |
-| `npm run icons`              | favicons and app icons from `scripts/*.svg`               |
-| `bash scripts/screenshots.sh` | these README screenshots (needs `npm run dev`)           |
+Components import `@/fx`, `@/lib/utils`, `@/lib/theme`, `@/components/ui/*` as if everything sat in
+one `src/` (that is how it lands in your app). In the docs app those resolve to `packages/react`
+first, then `packages/core` (`apps/docs/vite.config.ts` and `tsconfig.app.json`).
+
+All from the repo root:
+
+| Script                        | Does                                                               |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `npm run dev`                 | docs site (+ registry at `/r/`) on localhost                       |
+| `npm run build`               | type-check + production build into `apps/docs/dist` (site + registry) |
+| `npm run typecheck`           | type-check every workspace (docs, core on its own, react)          |
+| `npm run lint`                | oxlint                                                             |
+| `npm run registry:build`      | write the registry to `apps/docs/dist/r` without the site          |
+| `npm run cli:build`           | build the CLI package from `brand.config.ts`                       |
+| `npm run icons`               | favicons and app icons from `scripts/*.svg`                        |
+| `bash scripts/screenshots.sh` | these README screenshots (needs `npm run dev`)                     |
 
 ## Credits
 

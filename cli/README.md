@@ -12,11 +12,14 @@ npx sasuga add --all         # every component
 npx sasuga list              # every component, by category
 ```
 
-Options: `--yes` (no prompts), `--overwrite`, `--cwd <dir>`, `--registry <url>`, `--no-install`.
+Options: `--yes` (no prompts), `--overwrite`, `--cwd <dir>`, `--registry <url>`, `--framework <id>`, `--no-install`.
 
 `init` writes `sasuga.json` with the folders the files go to (`src/components/ui`,
 `src/components/art`, `src/lib`, `src/fx`, `src/styles/sasuga.css`) and the import alias
-(`@`). Change them there; `add` rewrites the imports to match.
+(`@`), plus `"framework": "react"`. Change them there; `add` rewrites the imports to match.
+
+React is the only framework today. In a Vue (or other) project the CLI says so and links the
+roadmap (https://codewithwan.github.io/sasuga-ui/roadmap) instead of copying React files.
 
 Docs: https://codewithwan.github.io/sasuga-ui/ · Source: https://github.com/codewithwan/sasuga-ui
 

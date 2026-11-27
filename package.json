@@ -2,7 +2,7 @@
   "name": "sasuga-ui",
   "private": true,
   "version": "0.1.0",
-  "description": "Docs site, registry and CLI source for sasuga/ui \u2014 game-feel UI components for React.",
+  "description": "Monorepo of sasuga/ui — game-feel UI components: the docs site, the framework packages (React today, Vue planned), the registry and the CLI.",
   "license": "MIT",
   "author": "codewithwan",
   "repository": {
@@ -22,36 +22,28 @@
     "anime",
     "animation",
     "springs",
-    "shadcn"
+    "shadcn",
+    "vue"
   ],
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "cli"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc -b",
+    "dev": "npm run dev -w @sasuga/docs --",
+    "build": "npm run build -w @sasuga/docs",
+    "preview": "npm run preview -w @sasuga/docs --",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "oxlint",
-    "preview": "vite preview",
     "registry:build": "node scripts/build-registry.mjs",
     "cli:build": "node scripts/build-cli.mjs",
     "icons": "bash scripts/build-icons.sh"
   },
-  "dependencies": {
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "react-router": "^8.5.3",
-    "tailwind-merge": "^3.7.1"
-  },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^24.19.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.90.0",
-    "tailwindcss": "^4.3.5",
-    "typescript": "~7.0.2",
-    "vite": "^8.3.6"
+    "typescript": "~7.0.2"
   }
 }

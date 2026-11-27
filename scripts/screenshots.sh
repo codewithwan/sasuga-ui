@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Real-usage screenshots for the README, taken from a running site with headless Chrome.
-#   npm run dev            # in another terminal
+#   npm run dev            # in another terminal (from the repo root)
 #   bash scripts/screenshots.sh [base-url]
 # The landing page is captured as one tall image and cropped per section (scrolled
 # headless screenshots are unreliable). If the landing layout changes, adjust CROPS.
@@ -35,6 +35,10 @@ shot "$OUT/component-page.png" "/components/gacha-spin?intro=0&mode=light"      
 echo "  .github/screenshots/component-page.png"
 shot "$OUT/components.png"     "/components?intro=0&mode=light&style=flat"        1440 1000
 echo "  .github/screenshots/components.png"
-shot "$OUT/mobile.png"         "/components/dialogue-box?intro=0&mode=light"      430  932
+# phones: through scripts/phone-frame.html (a 390x844 iframe), then cropped
+FRAME="file://$PWD/scripts/phone-frame.html?src="
+"$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=2 --window-size=600,900 \
+  --virtual-time-budget=25000 --screenshot="$TMP/phone.png" "${FRAME}$BASE/%3Fintro%3D0%26mode%3Dlight%26static%3D1" >/dev/null 2>&1
+magick "$TMP/phone.png" -crop 780x1688+0+0 +repage "$OUT/mobile.png"
 echo "  .github/screenshots/mobile.png"
 rm -rf "$TMP"

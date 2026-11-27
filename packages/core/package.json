@@ -1,0 +1,19 @@
+{
+  "name": "@sasuga/core",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Framework-agnostic core of sasuga/ui: tokens + styles (CSS), the FX canvas engine, springs, cn() and the theme store. No framework imports.",
+  "license": "MIT",
+  "author": "codewithwan",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.7.1"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0"
+  }
+}

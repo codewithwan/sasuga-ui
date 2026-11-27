@@ -1,0 +1,17 @@
+{
+  "name": "@sasuga/vue",
+  "private": true,
+  "version": "0.0.0",
+  "description": "sasuga/ui for Vue 3 \u2014 not started yet. See README.md and PORTING.md.",
+  "license": "MIT",
+  "author": "codewithwan",
+  "type": "module",
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
+  }
+}

@@ -17,10 +17,36 @@
   "overrides": [
     {
       "files": [
-        "src/docs/entries/*.tsx"
+        "apps/docs/src/docs/entries/*.tsx"
       ],
       "rules": {
         "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": [
+        "packages/core/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "message": "packages/core is framework-agnostic: put React code in packages/react."
+              },
+              {
+                "name": "react-dom",
+                "message": "packages/core is framework-agnostic: put React code in packages/react."
+              },
+              {
+                "name": "vue",
+                "message": "packages/core is framework-agnostic: put Vue code in packages/vue."
+              }
+            ]
+          }
+        ]
       }
     }
   ]

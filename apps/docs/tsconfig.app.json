@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    /* "@/…" as the components see it: React package first, then the core, then the docs app.
+       Same order as resolve.alias in vite.config.ts (exact entries are the React barrels). */
+    "paths": {
+      "@/fx": ["../../packages/react/src/fx/index.ts"],
+      "@/fx/*": ["../../packages/react/src/fx/*", "../../packages/core/src/fx/*"],
+      "@/lib/*": ["../../packages/react/src/lib/*", "../../packages/core/src/lib/*"],
+      "@/components/ui": ["../../packages/react/src/components/ui/index.ts"],
+      "@/components/ui/*": ["../../packages/react/src/components/ui/*"],
+      "@/components/art/*": ["../../packages/react/src/components/art/*"],
+      "@/*": ["./src/*"]
+    },
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "../../packages/core/src", "../../packages/react/src", "../../brand.config.ts"]
+}

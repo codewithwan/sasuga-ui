@@ -1,0 +1,83 @@
+{
+  "//": "Framework ports of the kit. status: planned → in-progress → preview → available. From preview on, the port's registry is published at r/<id>/ (React stays at r/). The components a port has are detected from its files; list the slugs you are porting right now in inProgress. Read by scripts/build-registry.mjs (→ r/frameworks.json) and the docs roadmap page. See packages/vue/PORTING.md.",
+  "frameworks": [
+    {
+      "id": "react",
+      "title": "React",
+      "status": "available",
+      "package": "packages/react",
+      "requires": "React 19, TypeScript, Tailwind CSS v4"
+    },
+    {
+      "id": "vue",
+      "title": "Vue",
+      "status": "planned",
+      "package": "packages/vue",
+      "requires": "Vue 3.5, TypeScript, Tailwind CSS v4",
+      "inProgress": []
+    }
+  ],
+  "//board": "Kanban on the roadmap page. status: planned | in-progress | done. tag is a short label; issue (optional) is a GitHub issue number.",
+  "board": [
+    {
+      "title": "React kit — 54 components",
+      "status": "done",
+      "tag": "React"
+    },
+    {
+      "title": "CLI: npx sasuga init / add / list",
+      "status": "done",
+      "tag": "CLI"
+    },
+    {
+      "title": "Registry + llms.txt for AI agents",
+      "status": "done",
+      "tag": "Docs"
+    },
+    {
+      "title": "3 styles × 4 colours, light / dark",
+      "status": "done",
+      "tag": "Theming"
+    },
+    {
+      "title": "Monorepo: core / react / vue",
+      "status": "done",
+      "tag": "Repo"
+    },
+    {
+      "title": "Vue slot + porting guide ready",
+      "status": "done",
+      "tag": "Vue"
+    },
+    {
+      "title": "Vue port — first 15 components",
+      "status": "planned",
+      "tag": "Vue"
+    },
+    {
+      "title": "CLI support for Vue projects",
+      "status": "planned",
+      "tag": "CLI"
+    },
+    {
+      "title": "Svelte port",
+      "status": "planned",
+      "tag": "Svelte"
+    },
+    {
+      "title": "Angular port",
+      "status": "planned",
+      "tag": "Angular"
+    },
+    {
+      "title": "Radial menu, minimap, loot table",
+      "status": "planned",
+      "tag": "Game"
+    },
+    {
+      "title": "Theme builder (pick your own colours)",
+      "status": "planned",
+      "tag": "Theming"
+    }
+  ]
+}

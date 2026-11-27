@@ -59,11 +59,14 @@ ${run} add --all         # every component
 ${run} list              # every component, by category
 \`\`\`
 
-Options: \`--yes\` (no prompts), \`--overwrite\`, \`--cwd <dir>\`, \`--registry <url>\`, \`--no-install\`.
+Options: \`--yes\` (no prompts), \`--overwrite\`, \`--cwd <dir>\`, \`--registry <url>\`, \`--framework <id>\`, \`--no-install\`.
 
 \`init\` writes \`${brand.package}.json\` with the folders the files go to (\`src/components/ui\`,
 \`src/components/art\`, \`src/lib\`, \`src/fx\`, \`src/styles/${brand.package}.css\`) and the import alias
-(\`@\`). Change them there; \`add\` rewrites the imports to match.
+(\`@\`), plus \`"framework": "react"\`. Change them there; \`add\` rewrites the imports to match.
+
+React is the only framework today. In a Vue (or other) project the CLI says so and links the
+roadmap (${docs}roadmap) instead of copying React files.
 
 Docs: ${docs} · Source: https://github.com/${brand.repo}
 

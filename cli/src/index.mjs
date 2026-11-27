@@ -15,6 +15,16 @@ const BRAND = /* @brand */ { name: 'UI kit', package: 'ui-kit', version: '0.0.0-
 const SLUG = BRAND.package.replace(/^@[^/]+\//, '')
 const CONFIG_FILE = `${SLUG}.json`
 const CORE = 'core'
+/** The framework whose registry sits at the root of the registry URL; other ports live under <registry>/<framework>/. */
+const DEFAULT_FRAMEWORK = 'react'
+/** UI frameworks the CLI can recognise from package.json (first match wins, so React projects stay React). */
+const UI_FRAMEWORKS = [
+  ['react', 'React', ['react', 'next']],
+  ['vue', 'Vue', ['vue', 'nuxt']],
+  ['svelte', 'Svelte', ['svelte', '@sveltejs/kit']],
+  ['solid', 'Solid', ['solid-js']],
+  ['angular', 'Angular', ['@angular/core']],
+]
 
 /* ─────────────────────────── output ─────────────────────────── */
 
@@ -45,7 +55,12 @@ const snippet = (text, title) => {
 }
 const header = (cmd) => out(`\n${c.bold(c.magenta('◆'))} ${c.bold(BRAND.name)} ${c.dim(`· ${cmd} · v${BRAND.version}`)}\n`)
 
-class CliError extends Error {}
+class CliError extends Error {
+  constructor(message, { quiet = false } = {}) {
+    super(message)
+    this.quiet = quiet // already explained on stdout: exit 1 without the red line
+  }
+}
 
 // `… | head` closes the pipe early: stop quietly
 process.stdout.on('error', (e) => {
@@ -70,6 +85,7 @@ ${c.bold('Options')}
   -a, --all              every component (add)
       --cwd <dir>        the project folder (default: current folder)
       --registry <url>   registry to read from (default: ${BRAND.registry})
+      --framework <id>   UI framework (default: from ${CONFIG_FILE}, else detected; react today)
       --no-install       do not install npm packages, print the command instead
   -h, --help             show this help
   -v, --version          show the version
@@ -87,6 +103,7 @@ function parse(argv) {
       all: { type: 'boolean', short: 'a' },
       cwd: { type: 'string' },
       registry: { type: 'string' },
+      framework: { type: 'string' },
       'no-install': { type: 'boolean' },
       help: { type: 'boolean', short: 'h' },
       version: { type: 'boolean', short: 'v' },
@@ -163,14 +180,17 @@ function parseJsonc(text) {
 
 /* ─────────────────────────── registry ─────────────────────────── */
 
-const registryBase = () => {
+/** The registry root (where index.json and frameworks.json are). */
+const registryRoot = () => {
   const r = ctx.flags.registry ?? loadConfig()?.registry ?? BRAND.registry
   return r.endsWith('/') ? r : `${r}/`
 }
+/** Where this project's framework's items are: the root for React (as in 0.1), <root>/<framework>/ otherwise. */
+const registryBase = () => (ctx.framework && ctx.framework !== DEFAULT_FRAMEWORK ? `${registryRoot()}${ctx.framework}/` : registryRoot())
 const cache = new Map()
-async function fetchJson(name) {
-  if (cache.has(name)) return cache.get(name)
-  const base = registryBase()
+async function fetchJson(name, base = registryBase()) {
+  const key = `${base}${name}`
+  if (cache.has(key)) return cache.get(key)
   let data
   if (/^https?:\/\//.test(base)) {
     let res
@@ -187,8 +207,17 @@ async function fetchJson(name) {
     if (!existsSync(p)) return null
     data = JSON.parse(readFileSync(p, 'utf8'))
   }
-  cache.set(name, data)
+  cache.set(key, data)
   return data
+}
+
+/** r/frameworks.json: every framework port and its status (null when the registry predates it). */
+async function getFrameworks() {
+  try {
+    return await fetchJson('frameworks.json', registryRoot())
+  } catch {
+    return null
+  }
 }
 async function getIndex() {
   const index = await fetchJson('index.json')
@@ -231,7 +260,8 @@ function detect() {
   if (!pkg) throw new CliError(`No package.json in ${ctx.cwd}. Run this inside your app (or pass --cwd <dir>).`)
   const deps = { ...pkg.peerDependencies, ...pkg.devDependencies, ...pkg.dependencies }
   const viteConfig = firstFile(['vite.config.ts', 'vite.config.mts', 'vite.config.js', 'vite.config.mjs'])
-  const framework = deps.next ? 'next' : deps.vite || viteConfig ? 'vite' : 'react'
+  const framework = deps.next ? 'next' : deps.vite || viteConfig ? 'vite' : 'react' // the bundler / meta-framework
+  const ui = UI_FRAMEWORKS.find(([, , names]) => names.some((n) => deps[n]))?.[0] ?? DEFAULT_FRAMEWORK
   const src = existsSync(abs('src')) ? 'src' : '.'
 
   // Tailwind CSS: the installed version wins over the range in package.json
@@ -263,7 +293,7 @@ function detect() {
   const entry = firstFile(['src/main.tsx', 'src/main.jsx', 'src/index.tsx', 'src/main.ts'])
   const typescript = Boolean(deps.typescript) || existsSync(abs('tsconfig.json'))
 
-  return { pkg, deps, framework, src, tailwind, alias, viteConfig, viteAlias, mainCss, entry, typescript, pm: packageManager(ctx.cwd) }
+  return { pkg, deps, framework, ui, src, tailwind, alias, viteConfig, viteAlias, mainCss, entry, typescript, pm: packageManager(ctx.cwd) }
 }
 
 /* ─────────────────────────── config ─────────────────────────── */
@@ -271,6 +301,7 @@ function detect() {
 function defaultConfig(project) {
   const base = (p) => (project.src === '.' ? p : `${project.src}/${p}`)
   return {
+    framework: ctx.framework ?? DEFAULT_FRAMEWORK,
     alias: project.alias?.name ?? '@',
     aliasRoot: project.alias?.root ?? project.src,
     rsc: project.framework === 'next',
@@ -435,6 +466,45 @@ function printReport({ created, updated, unchanged, kept }) {
   for (const f of updated) out(`  ${c.yellow('replaced')} ${rel(f)}`)
   for (const f of kept) out(`  ${c.dim('kept    ')} ${c.dim(`${rel(f)} (exists, differs; use --overwrite to replace)`)}`)
   if (unchanged.length) out(`  ${c.dim(`unchanged ${unchanged.length} file${unchanged.length > 1 ? 's' : ''} already up to date`)}`)
+}
+
+/* ─────────────────────────── framework ─────────────────────────── */
+
+/** The UI framework: --framework, else sasuga.json, else what package.json depends on. */
+function pickFramework() {
+  const flag = ctx.flags.framework?.toLowerCase()
+  if (flag) return flag
+  const cfg = existsSync(abs('package.json')) ? loadConfig() : null
+  if (cfg) return cfg.framework ?? DEFAULT_FRAMEWORK // configs written by 0.1 have no framework: React
+  try {
+    return detect().ui
+  } catch {
+    return DEFAULT_FRAMEWORK
+  }
+}
+
+/**
+ * Makes sure the registry has the project's framework. React always passes (its registry is the root,
+ * as in 0.1). For any other framework, r/frameworks.json says whether its port is published yet; if not,
+ * this explains it and points at the roadmap instead of failing on a missing file.
+ */
+async function ensureFramework() {
+  const id = ctx.framework
+  if (id === DEFAULT_FRAMEWORK) return
+  const title = UI_FRAMEWORKS.find(([f]) => f === id)?.[1] ?? id
+  const info = await getFrameworks()
+  const port = info?.frameworks?.find((f) => f.id === id)
+  if (port?.registry != null) return
+  const roadmap = info?.roadmap ?? `${BRAND.docs}roadmap`
+  const ready = (info?.frameworks ?? [{ id: DEFAULT_FRAMEWORK, title: 'React', registry: '' }]).filter((f) => f.registry != null)
+  out(`${c.magenta('◆')} ${c.bold(`${title} support is coming`)}${port ? c.dim(` (status: ${port.status})`) : ''}`)
+  out()
+  out(`  ${BRAND.name} is ${ready.map((f) => f.title).join(' and ')} only for now${port ? `; the ${title} port is on the roadmap` : ''}.`)
+  out(`  Follow it, or help port it: ${c.blue(roadmap)}`)
+  out()
+  out(c.dim(`  Using ${ready[0]?.title ?? 'React'} in this project after all? Pass --framework ${ready[0]?.id ?? DEFAULT_FRAMEWORK}, or set "framework" in ${CONFIG_FILE}.`))
+  out()
+  throw new CliError(`No ${title} components in the registry yet.`, { quiet: true })
 }
 
 /* ─────────────────────────── init ─────────────────────────── */
@@ -669,6 +739,10 @@ async function main() {
   ctx = { cwd, flags, interactive: !flags.yes && Boolean(process.stdin.isTTY && process.stdout.isTTY) }
 
   try {
+    if (['init', 'add', 'list', 'ls'].includes(command)) {
+      ctx.framework = pickFramework()
+      await ensureFramework()
+    }
     if (command === 'init') await init()
     else if (command === 'add') await add(names)
     else if (command === 'list' || command === 'ls') await list()
@@ -679,7 +753,9 @@ async function main() {
     }
     return 0
   } catch (e) {
-    if (e instanceof CliError) fail(e.message)
+    if (e instanceof CliError) {
+      if (!e.quiet) fail(e.message)
+    }
     else fail(e?.stack ?? String(e))
     return 1
   }

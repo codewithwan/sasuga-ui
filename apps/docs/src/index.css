@@ -1,0 +1,6 @@
+/* The docs site's stylesheet: the kit's own stylesheet from packages/core (tokens, styles,
+   colours, ui-* utilities; it starts with @import 'tailwindcss') + the folders Tailwind scans.
+   The app folder is scanned automatically; the kit components live in packages/react. */
+@import '../../../packages/core/src/styles/index.css';
+
+@source '../../../packages/react/src';

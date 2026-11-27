@@ -1,5 +1,8 @@
 # Design rules (brand name lives in brand.config.ts)
 
+These rules hold for every framework port (`packages/react`, `packages/vue`, …): the tokens,
+utilities and effects all come from `packages/core`, so a port only changes the framework glue.
+
 The kit is built around anime impact frames: calm sticker-like
 controls at rest, a burst of drawn effects on interaction. It must **not** look like
 any specific game's UI (no Persona 5 look-alike).
@@ -12,15 +15,15 @@ any specific game's UI (no Persona 5 look-alike).
 | `data-theme` | `lilac` (default), `mint`, `peach`, `sky` | **Colour**: `accent`, `accent-soft`, `pop` |
 | `data-mode` | `light`, `dark` (default from `prefers-color-scheme`) | **Surface**: `ink` ⇄ `paper`/`canvas` flip, so ink stays the line + text colour |
 
-Every switch (`applyTheme` / `applyStyle` / `applyMode` in `src/lib/theme.ts`) runs inside a View Transition: cel reveals as a circle from the click point, manga drops the new page in stepped comic frames, flat cross-fades, light/dark always opens as a circle from the toggle.
+Every switch (`applyTheme` / `applyStyle` / `applyMode` in `packages/core/src/lib/theme-core.ts`) runs inside a View Transition: cel reveals as a circle from the click point, manga drops the new page in stepped comic frames, flat cross-fades, light/dark always opens as a circle from the toggle.
 
-| Style | Look | FX (`src/fx/effects.ts`) |
+| Style | Look | FX (`packages/core/src/fx/effects.ts`) |
 |---|---|---|
 | **Cel** | White sticker, 3px navy ink outline, 15–20px radius, solid offset shadow in `accent-soft`, Mochiy Pop One headings with a soft letter drop, M PLUS Rounded body | soft focus lines, spiky burst, smoke, round debris, Mochiy lettering, speed lines, slashes |
 | **Manga** | Printed comic page: off-white paper, 3px black line, almost square corners, solid black drop, screentone (`ui-tone`), Anton uppercase headings | everything, plus focus lines, sharp debris, big lettering |
 | **Flat** | Calm product UI with life: faint hairline, 14–22px radius, layered shadow tinted by the accent, glossy fills, Plus Jakarta Sans 800 | ring + dot pop + sparkle, no lettering |
 
-Springs (`useSprings`) are scaled by `KICK[uiStyle()]`: cel 1, manga 1, flat 0.5.
+Springs (`createSpring` in `packages/core/src/fx/spring.ts`, wrapped by React's `useSprings`) are scaled by `KICK[uiStyle()]`: cel 1, manga 1, flat 0.5.
 
 ## Tokens → utilities (always use these, never hard-code a shape)
 
@@ -40,12 +43,12 @@ Springs (`useSprings`) are scaled by `KICK[uiStyle()]`: cel 1, manga 1, flat 0.5
 | Animations | `animate-pop`, `animate-shake`, `animate-blink`, `animate-panel-in`, `animate-rise`, `animate-bob`, `animate-marquee(-rev)`, `animate-drift` (+ `motion-lines` for moving stripes), `animate-wobble` |
 | Fonts | `font-sans` (Inter body), `font-display` (via `ui-head`), `font-jp` (Dela Gothic One — small Japanese sub-labels only), `font-mono` |
 
-The reference implementation is `src/components/ui/button.tsx`.
+The reference implementation is `packages/react/src/components/ui/button.tsx`.
 
 ## Icons and art
 
-- No emoji or unicode glyphs as icons. Use `<Icon name="…" />` from `src/components/ui/icon.tsx` (50 sticker icons, `duo` / `line` / `solid`, recolour with `--icon-fill` / `--icon-stroke`).
-- The mascot is **Koma** (`src/components/art/mascot.tsx`): `<Mascot expression>` bust and `<Chibi pose>` full body. Use her for demos instead of placeholder faces.
+- No emoji or unicode glyphs as icons. Use `<Icon name="…" />` from `packages/react/src/components/ui/icon.tsx` (50 sticker icons, `duo` / `line` / `solid`, recolour with `--icon-fill` / `--icon-stroke`).
+- The mascot is **Koma** (`packages/react/src/components/art/mascot.tsx`): `<Mascot expression>` bust and `<Chibi pose>` full body. Use her for demos instead of placeholder faces.
 - Never hard-code black/white: only `text-white` on accent/pop fills survives dark mode.
 
 ## Banned (Persona-isms and removed utilities)

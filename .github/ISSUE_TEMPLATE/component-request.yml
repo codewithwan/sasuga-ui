@@ -1,0 +1,36 @@
+name: Component request
+description: Ask for a new component (or a variant of one).
+title: "[Request] "
+labels: [request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! Check the [roadmap](https://codewithwan.github.io/sasuga-ui/roadmap) first — if it's already there, add a 👍 to that issue instead.
+        Requests with the most 👍 move up the board.
+  - type: input
+    id: name
+    attributes:
+      label: Component
+      placeholder: e.g. Loot table, Minimap, Radial menu
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: What would you build with it?
+      description: The screen or game it's for, and how it should feel when you use it.
+    validations:
+      required: true
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options: [React, Vue, Svelte, Angular, Any]
+    validations:
+      required: true
+  - type: textarea
+    id: refs
+    attributes:
+      label: References (optional)
+      description: Links, screenshots or videos of similar UI.

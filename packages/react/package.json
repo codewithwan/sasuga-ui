@@ -1,0 +1,20 @@
+{
+  "name": "@sasuga/react",
+  "private": true,
+  "version": "0.1.0",
+  "description": "sasuga/ui for React 19: the components, the art and the React adapters (useSprings, useTheme) over @sasuga/core.",
+  "license": "MIT",
+  "author": "codewithwan",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sasuga/core": "0.1.0",
+    "class-variance-authority": "^0.7.1"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
