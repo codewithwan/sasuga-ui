@@ -153,7 +153,7 @@ export function InstallSnippet({ packages = site.package, dev = false, mode = 'i
 
   return (
     <div className={cn('ui-card min-w-0 overflow-hidden', CODE_SURFACE, className)} style={CODE_VARS}>
-      <div className="flex min-h-12 flex-wrap items-center gap-2 border-b-(length:--ui-bw-thin) border-b-(color:--ui-line) bg-paper p-1.5 pr-2">
+      <div className="@container/bar flex min-h-12 flex-wrap items-center gap-2 border-b-(length:--ui-bw-thin) border-b-(color:--ui-line) bg-paper p-1.5 pr-2">
         <div
           ref={group}
           role="radiogroup"
@@ -183,7 +183,7 @@ export function InstallSnippet({ packages = site.package, dev = false, mode = 'i
             </button>
           ))}
         </div>
-        <CopyButton text={command} className="ml-auto" />
+        <CopyButton text={command} compact className="ml-auto" />
       </div>
       <div className="relative bg-(color:--code-bg)">
         <pre

@@ -13,7 +13,8 @@ const POP = 'cubic-bezier(.2,1.6,.4,1)'
  * Copy button with a satisfying "got it": the copy icon squashes away as a check pops in,
  * the pill flashes to the accent, a tiny burst marks it and a toast confirms.
  */
-export function CopyButton({ text, label = 'Copy', className }: { text: string; label?: string; className?: string }) {
+/** `compact`: inside an `@container/bar`, the label drops when the bar is under 25rem and only the icon stays. */
+export function CopyButton({ text, label = 'Copy', compact = false, className }: { text: string; label?: string; compact?: boolean; className?: string }) {
   const toast = useToast()
   const ref = useRef<HTMLButtonElement>(null)
   const timer = useRef(0)
@@ -53,6 +54,7 @@ export function CopyButton({ text, label = 'Copy', className }: { text: string; 
       aria-label={copied ? 'Copied' : `${label} to clipboard`}
       className={cn(
         'ui-head ui-pill ui-border-thin group/copy inline-flex shrink-0 cursor-pointer items-center gap-1.5 bg-paper py-1.5 pr-3 pl-2.5 text-[13px] leading-none text-ink transition-[background-color,color,translate,border-color] duration-200 ease-snap hover:-translate-y-px hover:bg-canvas focus-visible:ui-focus active:translate-y-px data-copied:border-transparent data-copied:bg-accent data-copied:text-white',
+        compact && '@max-[25rem]/bar:size-9 @max-[25rem]/bar:justify-center @max-[25rem]/bar:p-0',
         className,
       )}
     >
@@ -70,7 +72,7 @@ export function CopyButton({ text, label = 'Copy', className }: { text: string; 
           className="scale-[.2_.6] opacity-0 transition-[scale,opacity] delay-75 duration-300 ease-snap group-data-copied/copy:scale-100 group-data-copied/copy:opacity-100"
         />
       </span>
-      <span>{copied ? 'Copied' : label}</span>
+      <span className={cn(compact && '@max-[25rem]/bar:hidden')}>{copied ? 'Copied' : label}</span>
       <span className="sr-only" aria-live="polite">
         {copied ? 'Copied to clipboard' : ''}
       </span>

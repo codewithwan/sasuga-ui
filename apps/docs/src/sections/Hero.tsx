@@ -1,3 +1,4 @@
+import { Art } from '@/components/site/Art'
 import { ButtonLink } from '@/components/ui'
 import { Icon } from '@/components/ui/icon'
 import { KineticText } from '@/components/ui/kinetic-text'
@@ -82,18 +83,14 @@ export function Hero({ ready }: { ready: boolean }) {
           </Reveal>
         </div>
 
-        <Reveal show={ready} from="right" delay={500} className="mx-auto w-full max-w-[520px] min-[1024px]:max-w-none">
-          <img
-            src={withBase('/assets/hero/koma-impact.webp')}
-            alt={`Koma, the ${site.name} mascot, slamming a giant button with an impact burst`}
-            width={1600}
-            height={1067}
-            fetchPriority="high"
-            decoding="async"
-            draggable={false}
-            className="block h-auto w-full select-none"
-          />
-        </Reveal>
+        <Art
+          name="hero/koma-impact"
+          alt={`Koma, the ${site.name} mascot, slamming a giant button with an impact burst`}
+          priority
+          paused={!ready}
+          delay={350}
+          className="mx-auto w-full max-w-[520px] min-[1024px]:max-w-none"
+        />
       </div>
     </section>
   )

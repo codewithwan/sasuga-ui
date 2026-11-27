@@ -108,6 +108,11 @@
       "title": "Mascot art, key visual and social card",
       "status": "done",
       "tag": "Art"
+    },
+    {
+      "title": "Image loader: silhouette placeholders, ink / slash / pop reveals",
+      "status": "done",
+      "tag": "Display"
     }
   ]
 }

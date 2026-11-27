@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Art } from '@/components/site/Art'
 import { Badge } from '@/components/ui/badge'
 import { ButtonLink } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
@@ -248,15 +249,7 @@ export function Roadmap() {
       }
     >
       <div className="ui-card flex flex-wrap items-center gap-x-6 gap-y-4 bg-paper p-5 min-[640px]:flex-nowrap">
-        <img
-          src={withBase('/assets/mascot/koma-wink.webp')}
-          alt=""
-          width={768}
-          height={768}
-          loading="lazy"
-          decoding="async"
-          className="-my-2 h-auto w-24 shrink-0 min-[640px]:w-28"
-        />
+        <Art name="mascot/koma-wink" alt="" reveal="pop" className="-my-2 w-24 shrink-0 min-[640px]:w-28" />
         <div className="grid min-w-0 gap-3">
           <p className="ui-head m-0 text-xl leading-tight text-ink">Missing a component? Ask for it.</p>
           <div className="flex flex-wrap gap-3">

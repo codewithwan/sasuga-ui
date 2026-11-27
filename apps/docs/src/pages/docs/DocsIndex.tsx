@@ -7,6 +7,7 @@ import { CATEGORIES } from '@/docs/types'
 import { STYLES, THEMES, useTheme } from '@/lib/theme'
 import { useTitle } from '../use-title'
 import { Icon } from '@/components/ui/icon'
+import { Art } from '@/components/site/Art'
 
 /** The two axes, side by side: pick a style (structure) and a colour (accent). */
 function StyleGallery() {
@@ -37,15 +38,20 @@ export function DocsIndex() {
         <h1 className="ui-head m-0 text-[clamp(48px,9vw,112px)] leading-[0.95] text-ink">
           <KineticText text="Components" />
         </h1>
-        <p className="m-0 max-w-[60ch] text-lg leading-relaxed text-mute">
-          Every component is one file you copy into your project. Each card below is live — poke it, then open its page for the code,
-          variants and props. Switch the style and colour here and every preview redraws.
-        </p>
-        <div className="ui-head flex flex-wrap items-center gap-2.5 text-[15px] leading-none">
-          <span className="ui-pill ui-fill bg-ink px-3.5 py-2 text-paper">{docs.length} components</span>
-          <span className="ui-pill ui-fill bg-accent px-3.5 py-2 text-white">
-            {STYLES.length} styles × {THEMES.length} colours
-          </span>
+        <div className="flex items-end justify-between gap-6">
+          <div className="grid min-w-0 gap-5">
+            <p className="m-0 max-w-[60ch] text-lg leading-relaxed text-mute">
+              Every component is one file you copy into your project. Each card below is live — poke it, then open its page for the code,
+              variants and props. Switch the style and colour here and every preview redraws.
+            </p>
+            <div className="ui-head flex flex-wrap items-center gap-2.5 text-[15px] leading-none">
+              <span className="ui-pill ui-fill bg-ink px-3.5 py-2 text-paper">{docs.length} components</span>
+              <span className="ui-pill ui-fill bg-accent px-3.5 py-2 text-white">
+                {STYLES.length} styles × {THEMES.length} colours
+              </span>
+            </div>
+          </div>
+          <Art name="mascot/koma-three-quarter" alt="" reveal="pop" priority className="-mb-3 hidden w-[clamp(120px,14vw,180px)] shrink-0 min-[640px]:block" />
         </div>
         <StyleGallery />
         <p className="m-0 text-[15px] text-mute">

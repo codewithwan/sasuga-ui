@@ -26,14 +26,14 @@ export const withBase = (path: string) => `${import.meta.env.BASE_URL.replace(/\
 /** Document title for a page: "Theming — <brand name>". */
 export const pageTitle = (page?: string) => (page ? `${page} — ${site.name}` : `${site.name} — ${brand.tagline}`)
 
-/** The written docs, in reading order. Components follow them in the sidebar. */
+/** The written docs, in reading order. Components follow them in the sidebar. `art` is the Koma in each page header (data/art.ts). */
 export const GUIDES = [
-  { to: '/docs', title: 'Introduction', jp: '紹介' },
-  { to: '/docs/installation', title: 'Installation', jp: '導入' },
-  { to: '/docs/theming', title: 'Theming', jp: 'テーマ' },
-  { to: '/docs/motion', title: 'FX & Motion', jp: '動き' },
-  { to: '/docs/embed', title: 'Embed', jp: '埋め込み' },
-  { to: '/docs/roadmap', title: 'Roadmap', jp: '予定' },
+  { to: '/docs', title: 'Introduction', jp: '紹介', art: 'mascot/koma-happy' },
+  { to: '/docs/installation', title: 'Installation', jp: '導入', art: 'mascot/koma-neutral' },
+  { to: '/docs/theming', title: 'Theming', jp: 'テーマ', art: 'mascot/koma-wink' },
+  { to: '/docs/motion', title: 'FX & Motion', jp: '動き', art: 'mascot/koma-surprised' },
+  { to: '/docs/embed', title: 'Embed', jp: '埋め込み', art: 'mascot/koma-side' },
+  { to: '/docs/roadmap', title: 'Roadmap', jp: '予定', art: 'mascot/koma-back' },
 ] as const
 
 export const FONTS_LINK = `<link rel="preconnect" href="https://fonts.googleapis.com" />

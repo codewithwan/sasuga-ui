@@ -165,6 +165,7 @@ All from the repo root:
 | `npm run registry:build`      | write the registry to `apps/docs/dist/r` without the site          |
 | `npm run cli:build`           | build the CLI package from `brand.config.ts`                       |
 | `npm run icons`               | favicons and app icons from `scripts/*.svg`                        |
+| `python3 scripts/art-placeholders.py` | sizes + silhouette placeholders for `public/assets` (`data/art.ts`, needs Pillow) |
 | `bash scripts/screenshots.sh` | these README screenshots (needs `npm run dev`)                     |
 
 ## Credits

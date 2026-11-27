@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { Art } from '@/components/site/Art'
 import { GUIDES } from '@/data/site'
 import { docs } from '@/docs/registry'
 import { cn } from '@/lib/utils'
@@ -24,23 +25,26 @@ export function Guide({ to, lead, children }: GuideProps) {
 
   return (
     <article className="grid gap-12">
-      <header className="grid gap-4">
-        <nav aria-label="Breadcrumb" className="ui-head text-sm">
-          <Link to="/docs" className="text-mute no-underline transition-colors hover:text-accent focus-visible:ui-focus">
-            Docs
-          </Link>
-          <span aria-hidden="true" className="mx-2 text-accent">
-            /
-          </span>
-          <span aria-current="page" className="text-ink">
-            {g.title}
-          </span>
-        </nav>
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          <h1 className="ui-head m-0 text-[clamp(40px,6.5vw,80px)] leading-[0.95] text-ink">{g.title}</h1>
-          <span className="ui-pill bg-accent-soft/60 px-3 py-1 font-jp text-lg leading-tight text-ink">{g.jp}</span>
+      <header className="grid items-end gap-x-6 min-[640px]:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="grid min-w-0 gap-4">
+          <nav aria-label="Breadcrumb" className="ui-head text-sm">
+            <Link to="/docs" className="text-mute no-underline transition-colors hover:text-accent focus-visible:ui-focus">
+              Docs
+            </Link>
+            <span aria-hidden="true" className="mx-2 text-accent">
+              /
+            </span>
+            <span aria-current="page" className="text-ink">
+              {g.title}
+            </span>
+          </nav>
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+            <h1 className="ui-head m-0 text-[clamp(40px,6.5vw,80px)] leading-[0.95] text-ink">{g.title}</h1>
+            <span className="ui-pill bg-accent-soft/60 px-3 py-1 font-jp text-lg leading-tight text-ink">{g.jp}</span>
+          </div>
+          <div className="m-0 max-w-[62ch] text-lg leading-relaxed text-mute">{lead}</div>
         </div>
-        <div className="m-0 max-w-[62ch] text-lg leading-relaxed text-mute">{lead}</div>
+        <Art name={g.art} alt="" reveal="pop" delay={120} className="hidden w-[clamp(120px,15vw,180px)] min-[640px]:block" />
       </header>
 
       {children}

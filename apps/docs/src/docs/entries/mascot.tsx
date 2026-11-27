@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { Chibi, MASCOT_NAME, Mascot } from '@/components/art/mascot'
 import type { ChibiPose, MascotExpression } from '@/components/art/mascot'
-import { withBase } from '@/data/site'
+import { Art } from '@/components/site/Art'
 import { cn } from '@/lib/utils'
 import type { DocEntry } from '../types'
 
@@ -77,16 +77,8 @@ const ART = ['front', 'three-quarter', 'side', 'back', 'neutral', 'happy', 'surp
 function ReferenceArt() {
   return (
     <div className="grid w-full grid-cols-4 gap-2 min-[640px]:grid-cols-8">
-      {ART.map((n) => (
-        <img
-          key={n}
-          src={withBase(`/assets/mascot/koma-${n}.webp`)}
-          alt={`${MASCOT_NAME}, ${n.replace('-', ' ')}`}
-          width={768}
-          height={768}
-          loading="lazy"
-          className="h-auto w-full"
-        />
+      {ART.map((n, i) => (
+        <Art key={n} name={`mascot/koma-${n}`} alt={`${MASCOT_NAME}, ${n.replace('-', ' ')}`} reveal="pop" delay={i * 60} />
       ))}
     </div>
   )

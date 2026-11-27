@@ -2,6 +2,7 @@
 # Real-usage screenshots for the README, taken from a running site with headless Chrome.
 #   npm run dev            # in another terminal (from the repo root)
 #   bash scripts/screenshots.sh [base-url]
+# Reduced motion is forced so every reveal is in its final state.
 # The landing page is captured as one tall image and cropped per section (scrolled
 # headless screenshots are unreliable). If the landing layout changes, adjust CROPS.
 set -euo pipefail
@@ -13,7 +14,7 @@ CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 mkdir -p "$OUT"
 
 shot() { # file path width height
-  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+  "$CHROME" --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --force-prefers-reduced-motion \
     --window-size="$3,$4" --virtual-time-budget=10000 --screenshot="$1" "$BASE$2" >/dev/null 2>&1
 }
 crop() { # source name y height   (1440 px wide)
@@ -24,12 +25,12 @@ crop() { # source name y height   (1440 px wide)
 echo "screenshots from $BASE"
 shot "$TMP/cel.png"   "/?intro=0&mode=light"              1440 4500
 shot "$TMP/manga.png" "/?intro=0&mode=dark&style=manga"   1440 4500
-# CROPS: y offset and height of each landing section at 1440 px
-crop "$TMP/cel.png"   home        0    700
-crop "$TMP/cel.png"   game-hud    1040 790
-crop "$TMP/cel.png"   shop-player 1840 960
-crop "$TMP/cel.png"   chat-learn  2800 980
-crop "$TMP/manga.png" manga-dark  1040 790
+# CROPS: y offset and height of each landing section at 1440 px (in a 4500 px tall window the hero is 780 px)
+crop "$TMP/cel.png"   home        0    800
+crop "$TMP/cel.png"   game-hud    1020 790
+crop "$TMP/cel.png"   shop-player 1830 990
+crop "$TMP/cel.png"   chat-learn  2835 830
+crop "$TMP/manga.png" manga-dark  1020 790
 
 shot "$OUT/component-page.png" "/components/gacha-spin?intro=0&mode=light"        1440 1000
 echo "  .github/screenshots/component-page.png"

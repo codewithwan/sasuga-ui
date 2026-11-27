@@ -14,7 +14,7 @@ Each prompt is self-contained, so it can be re-run on its own.
 
 | # | Sheet | Grid | Files (in `apps/docs/public/assets/`) | Used in |
 |---|---|---|---|---|
-| 1 | Koma character sheet | 2×4 landscape | `mascot/koma-{front,three-quarter,side,back,neutral,happy,surprised,wink}.webp` | README "Meet Koma", docs Introduction (happy), Roadmap request card (wink), Mascot page (Reference art, all 8), 404 page (surprised) |
+| 1 | Koma character sheet | 2×4 landscape | `mascot/koma-{front,three-quarter,side,back,neutral,happy,surprised,wink}.webp` | every guide header (`GUIDES[].art` in `data/site.ts`: happy, neutral, wink, surprised, side, back), components index (three-quarter), landing band (happy), footer (front), Roadmap request card (wink), 404 (surprised), Mascot page (all 8), Image Loader page, README "Meet Koma" |
 | 2 | Key visual | single 3:2 | `hero/koma-impact.webp` | landing hero (beside the headline, under it on phones), README top image, `og-image.png` (rendered from `scripts/og-image.html`) |
 | 3 | Logo concepts | 2×2 | no raster shipped (sheet kept in `assets/raw/`) | **concept 1 (burst + star + pop shards) is the logo**, traced into vector polygons: `BrandMark mark="star"` (nav, footer, intro, Stickers page), `favicon.svg`, `scripts/icon-app.svg` (favicons and app icons via `npm run icons`) and the social card. As SVG it stays crisp and follows the theme colour and the style's line colour |
 
@@ -26,7 +26,8 @@ Each prompt is self-contained, so it can be re-run on its own.
 4. Check each sheet against the QA list. If one cell fails, reply: "Keep everything exactly the same, only redraw cell N so that ...". Regenerate the whole sheet only if the style drifted.
 5. Download the PNG and save it unedited in `assets/raw/` (git-ignored).
 6. Slice once into `apps/docs/public/assets/<group>/<name>.webp`. Busts often overlap their cell borders, so slice by connected components (each opaque blob goes to the cell nearest its centre), crop to its bounds, pad to a square and export 768×768 WebP (quality 88). Keep the key visual whole: trim transparent margins and export 1600 px wide.
-7. Wire them in with alt text (`Koma, the sasuga/ui mascot, …`).
+7. Run `python3 scripts/art-placeholders.py`: it writes each image's size and a ~1 KB placeholder (a 32 px silhouette for cut-out art) to `apps/docs/src/data/art.ts`.
+8. Wire them in with `<Art name="mascot/koma-happy" alt="…" />` (the docs wrapper around `ImageLoader`), with alt text like `Koma, the sasuga/ui mascot, …`, or `alt=""` where she is decoration.
 
 ## Export sizes
 
