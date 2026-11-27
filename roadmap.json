@@ -148,6 +148,11 @@
       "title": "Terminal replay: scripted sessions with spinners, progress and real key sounds",
       "status": "done",
       "tag": "Motion"
+    },
+    {
+      "title": "Stream overlay: starting / BRB / ending scenes, alerts, goal bar, OBS embed",
+      "status": "done",
+      "tag": "Motion"
     }
   ]
 }

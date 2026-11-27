@@ -287,7 +287,7 @@ export function RollingNumber({
         if (entering) {
           el.getAnimations().forEach((a) => a.cancel())
           delete el.dataset.leaving
-          const wpx = el.getBoundingClientRect().width
+          const wpx = el.offsetWidth // layout width: a scaled parent (FrameStage) must not shrink it
           el.style.overflow = 'clip'
           el.animate([{ width: '0px', opacity: 0 }, { width: `${wpx}px`, opacity: 1 }], {
             duration: 320,
@@ -298,7 +298,7 @@ export function RollingNumber({
           )
         } else if (s.leaving && el.dataset.leaving === undefined) {
           el.dataset.leaving = ''
-          const wpx = el.getBoundingClientRect().width
+          const wpx = el.offsetWidth // layout width: a scaled parent (FrameStage) must not shrink it
           el.style.overflow = 'clip'
           el.animate([{ width: `${wpx}px`, opacity: 1 }, { width: '0px', opacity: 0 }], {
             duration: 340,

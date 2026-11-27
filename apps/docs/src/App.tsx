@@ -15,6 +15,7 @@ import { Introduction } from '@/pages/docs/guides/Introduction'
 import { Roadmap } from '@/pages/docs/guides/Roadmap'
 import { Theming } from '@/pages/docs/guides/Theming'
 import { EmbedFx } from '@/pages/embed/EmbedFx'
+import { EmbedOverlay } from '@/pages/embed/EmbedOverlay'
 import { Home } from '@/pages/Home'
 import { NotFound } from '@/pages/NotFound'
 import { Footer } from '@/sections/Footer'
@@ -51,6 +52,7 @@ export default function App() {
     return (
       <Routes>
         <Route path="/embed/fx" element={<EmbedFx />} />
+        <Route path="/embed/overlay" element={<EmbedOverlay />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
