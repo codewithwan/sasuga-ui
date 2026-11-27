@@ -53,9 +53,14 @@ colours; this art is the reference she's drawn from.
 
 ## What's in it
 
-- **50+ components** — buttons, forms, overlays, menus, text motion, plus game pieces: health bars,
+- **70 components** — buttons, forms, overlays, menus, text motion, plus game pieces: health bars,
   skill buttons with cooldowns, combo counters, damage numbers, dialogue boxes, gacha cards and spins,
   inventory slots, quest logs, achievements.
+- **Motion graphics for video and streams** — Code Reel (code as kinetic type with a 3D camera and real
+  keyboard sound), Terminal Replay, Lyrics Player (synced lyrics, karaoke fill, motion lyrics), Kinetic Type,
+  Split Flap, Bar Race and a Stream Overlay pack (starting / BRB / ending scenes, alerts, goal bar) that
+  drops into OBS as a browser source. Everything runs on one clock, so it scrubs and syncs to a song or a
+  video, and Frame Stage lays any of it out at a real video size (16:9, 9:16, 1:1, 4:5 or any W × H).
 - **3 structural styles** — `cel` (thick ink line, sticker shadows), `manga` (square panels,
   screentone), `flat` (calm product UI).
 - **4 colours × light / dark**, all from CSS tokens.
