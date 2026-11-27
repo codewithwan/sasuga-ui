@@ -113,6 +113,11 @@
       "title": "Image loader: silhouette placeholders, ink / slash / pop reveals",
       "status": "done",
       "tag": "Display"
+    },
+    {
+      "title": "Code reel: code as kinetic type, 3D follow camera, autocomplete, diagnostics, terminal",
+      "status": "done",
+      "tag": "Motion"
     }
   ]
 }
