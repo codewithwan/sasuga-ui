@@ -2,12 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { prefersReducedMotion } from '@/fx'
 import { cn } from '@/lib/utils'
+import { playReelSound, unlockReelSound } from './code-reel-sound'
 import { Icon } from './icon'
 import { TimelineScrubber, useTimeline } from './timeline'
 
 /* ───────────── API ───────────── */
 
 export type CodeReelTone = 'error' | 'warn' | 'ok' | 'info'
+export type CodeReelSkin = 'neon' | 'paper' | 'phosphor' | 'ink'
+export type CodeReelChrome = 'editor' | 'window' | 'none'
 
 export type CodeReelLine = {
   /** The line as it ends up. Leading spaces indent it. */
@@ -26,12 +29,16 @@ export type CodeReelLog = { text: string; tone?: CodeReelTone }
 
 export type CodeReelProps = {
   lines: CodeReelLine[]
-  /** File name on the editor tab. */
+  /** File name on the editor tab or window title. */
   file?: string
   /** Logs printed in the terminal after the last line; the camera pulls back to show it. */
   terminal?: (string | CodeReelLog)[]
   /** The command on the terminal prompt. */
   command?: string
+  /** The look: neon (dark IDE, glow, LCD grid), paper (follows the kit theme and mode), phosphor (green CRT), ink (manga, black on paper with screentone). */
+  skin?: CodeReelSkin
+  /** Frame around the code: an editor tab with a breadcrumb, a plain window bar, or nothing. */
+  chrome?: CodeReelChrome
   /** Characters per second. */
   speed?: number
   /** Pause after each line, in seconds. */
@@ -48,38 +55,146 @@ export type CodeReelProps = {
   zoom?: number
   /** Depth of field, 0..1: lines away from the cursor blur and dim. */
   depth?: number
-  /** Neon glow on the text. */
+  /** Text glow. Default: on for neon and phosphor. */
   glow?: boolean
-  /** The LCD pixel grid over the screen. */
-  lcd?: boolean
+  /** The screen texture (LCD grid, scanlines or screentone, by skin). */
+  texture?: boolean
+  /** Synthesized key clicks, accept pops and diagnostic blips. true = 0.5, or a volume 0..1. Starts after the first click on the page. */
+  sound?: boolean | number
   /** Accessible name. Defaults to the code itself. */
   label?: string
   /** Classes for the screen: size it here (default aspect-video, full width; e.g. aspect-[9/16] for a vertical reel). */
   className?: string
 }
 
-/* ───────────── Syntax ───────────── */
+/* ───────────── Skins ───────────── */
 
 type Kind = 'kw' | 'fn' | 'prop' | 'id' | 'str' | 'num' | 'com' | 'pun' | 'sp'
+
+type Skin = {
+  bg: string
+  fg: string
+  /** Hairlines, gutter, chrome text. */
+  line: string
+  mute: string
+  band: string
+  bandEdge: string
+  cursor: string
+  menu: { bg: string; fg: string; sel: string; selFg: string }
+  ink: Record<Kind, string>
+  tone: Record<CodeReelTone, string>
+  glow: boolean
+  bold?: Partial<Record<Kind, number>>
+  texture: 'lcd' | 'scan' | 'tone' | 'none'
+  vignette: string
+}
+
+const mix = (c: string, k: number, to = 'transparent') => `color-mix(in oklab, ${c} ${k}%, ${to})`
+
+const SKINS: Record<CodeReelSkin, Skin> = {
+  neon: {
+    bg: '#05060b',
+    fg: '#a9b1d6',
+    line: 'rgb(255 255 255 / 0.1)',
+    mute: 'rgb(255 255 255 / 0.4)',
+    band: 'rgb(255 255 255 / 0.045)',
+    bandEdge: 'rgb(255 255 255 / 0.07)',
+    cursor: '#d9e6ff',
+    menu: { bg: 'rgb(13 16 32 / 0.95)', fg: 'rgb(255 255 255 / 0.6)', sel: 'rgb(42 78 168 / 0.7)', selFg: '#fff' },
+    ink: {
+      kw: 'var(--color-pop)',
+      fn: mix('var(--color-accent)', 70, 'white'),
+      prop: '#5fd4e0',
+      id: '#ff7088',
+      str: '#f2b25c',
+      num: '#c9a2ff',
+      com: '#6f7799',
+      pun: '#a9b1d6',
+      sp: 'inherit',
+    },
+    tone: { error: '#ff5c7a', warn: '#f2b25c', ok: '#5fe0a0', info: '#7aa2ff' },
+    glow: true,
+    texture: 'lcd',
+    vignette: 'rgb(0 0 0 / 0.78)',
+  },
+  paper: {
+    bg: 'var(--color-paper)',
+    fg: 'var(--color-ink)',
+    line: mix('var(--color-ink)', 14),
+    mute: mix('var(--color-ink)', 45),
+    band: mix('var(--color-accent)', 10),
+    bandEdge: mix('var(--color-accent)', 28),
+    cursor: 'var(--color-accent)',
+    menu: { bg: 'var(--color-paper)', fg: mix('var(--color-ink)', 70), sel: 'var(--color-accent)', selFg: '#fff' },
+    ink: {
+      kw: 'var(--color-pop)',
+      fn: 'var(--color-accent)',
+      prop: mix('var(--color-accent)', 55, 'var(--color-ink)'),
+      id: mix('var(--color-pop)', 65, 'var(--color-ink)'),
+      str: mix('#e0911f', 85, 'var(--color-ink)'),
+      num: mix('var(--color-accent)', 60, 'var(--color-pop)'),
+      com: 'var(--color-mute)',
+      pun: mix('var(--color-ink)', 70),
+      sp: 'inherit',
+    },
+    tone: { error: '#e5484d', warn: '#d98a00', ok: '#18a058', info: 'var(--color-accent)' },
+    glow: false,
+    texture: 'none',
+    vignette: mix('var(--color-ink)', 10),
+  },
+  phosphor: {
+    bg: '#020b05',
+    fg: '#3dff8a',
+    line: 'rgb(61 255 138 / 0.16)',
+    mute: 'rgb(61 255 138 / 0.45)',
+    band: 'rgb(61 255 138 / 0.07)',
+    bandEdge: 'rgb(61 255 138 / 0.14)',
+    cursor: '#7dffb0',
+    menu: { bg: 'rgb(3 24 11 / 0.95)', fg: 'rgb(61 255 138 / 0.65)', sel: 'rgb(61 255 138 / 0.25)', selFg: '#c8ffd9' },
+    ink: { kw: '#b4ffcf', fn: '#5cff9d', prop: '#36d97a', id: '#7dffb0', str: '#d8ffe5', num: '#b4ffcf', com: '#1f8f4c', pun: '#2fcf70', sp: 'inherit' },
+    tone: { error: '#ffb347', warn: '#e4ff5c', ok: '#5cff9d', info: '#7dffb0' },
+    glow: true,
+    texture: 'scan',
+    vignette: 'rgb(0 10 4 / 0.9)',
+  },
+  ink: {
+    bg: '#fbfaf5',
+    fg: '#141414',
+    line: 'rgb(20 20 20 / 0.18)',
+    mute: 'rgb(20 20 20 / 0.45)',
+    band: 'rgb(20 20 20 / 0.06)',
+    bandEdge: 'rgb(20 20 20 / 0.7)',
+    cursor: '#141414',
+    menu: { bg: '#fbfaf5', fg: '#141414', sel: '#141414', selFg: '#fbfaf5' },
+    ink: { kw: '#141414', fn: '#141414', prop: '#3a3a3a', id: '#141414', str: '#141414', num: '#141414', com: '#8a8a8a', pun: '#5a5a5a', sp: 'inherit' },
+    tone: { error: '#d4202c', warn: '#141414', ok: '#141414', info: '#141414' },
+    glow: false,
+    bold: { kw: 800, fn: 700, str: 600 },
+    texture: 'tone',
+    vignette: 'rgb(20 20 20 / 0.12)',
+  },
+}
+
+const TEXTURE: Record<Skin['texture'], CSSProperties | null> = {
+  lcd: {
+    backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.55) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgb(0 0 0/.45) 0 1px, transparent 1px 3px)',
+    mixBlendMode: 'multiply',
+    opacity: 0.6,
+  },
+  scan: { backgroundImage: 'repeating-linear-gradient(0deg, rgb(0 0 0/.6) 0 1px, transparent 1px 3px)', mixBlendMode: 'multiply', opacity: 0.75 },
+  tone: { backgroundImage: 'radial-gradient(rgb(20 20 20/.16) 0.9px, transparent 1.3px)', backgroundSize: '6px 6px', opacity: 1 },
+  none: null,
+}
+
+const TONE_ICON = { error: 'danger', warn: 'warning', ok: 'check', info: 'info' } as const
+
+/* ───────────── Syntax ───────────── */
 
 const KW = new Set(
   'async await function const let var return if else for while do new class extends import from export default true false null undefined this typeof of in try catch finally throw yield break continue switch case void'.split(
     ' ',
   ),
 )
-const INK: Record<Kind, string> = {
-  kw: 'var(--color-pop)',
-  fn: 'color-mix(in oklab, var(--color-accent) 70%, white)',
-  prop: '#5fd4e0',
-  id: '#ff7088',
-  str: '#f2b25c',
-  num: '#c9a2ff',
-  com: '#6f7799',
-  pun: '#a9b1d6',
-  sp: 'inherit',
-}
-const TONE: Record<CodeReelTone, string> = { error: '#ff5c7a', warn: '#f2b25c', ok: '#5fe0a0', info: '#7aa2ff' }
-const TONE_ICON = { error: 'danger', warn: 'warning', ok: 'check', info: 'info' } as const
 
 type Seg = { text: string; kind: Kind; start: number; sq: boolean }
 
@@ -166,26 +281,25 @@ function plan(lines: CodeReelLine[], speed: number, hold: number, instant: boole
 
 const LINE_H = 1.65 // em
 
-function Code({ segs, n, showSq, tone }: { segs: Seg[]; n: number; showSq: boolean; tone: string }): ReactNode {
+function Code({ segs, n, showSq, tone, skin }: { segs: Seg[]; n: number; showSq: boolean; tone: string; skin: Skin }): ReactNode {
   return segs.map((s, k) => {
     if (s.start >= n) return null
-    const text = s.text.slice(0, n - s.start)
-    const style: CSSProperties = { color: INK[s.kind], fontStyle: s.kind === 'com' ? 'italic' : undefined }
+    const style: CSSProperties = { color: skin.ink[s.kind], fontStyle: s.kind === 'com' ? 'italic' : undefined, fontWeight: skin.bold?.[s.kind] }
     if (s.sq && showSq) Object.assign(style, { textDecoration: `underline wavy ${tone}`, textDecorationThickness: '0.07em', textUnderlineOffset: '0.22em' })
     return (
       <span key={k} style={style}>
-        {text}
+        {s.text.slice(0, n - s.start)}
       </span>
     )
   })
 }
 
-function Chip({ text, tone = 'error' }: { text: string; tone?: CodeReelTone }) {
-  const c = TONE[tone]
+function Chip({ text, tone = 'error', skin }: { text: string; tone?: CodeReelTone; skin: Skin }) {
+  const c = skin.tone[tone]
   return (
     <span
       className="ml-[1.6ch] inline-flex animate-[cr-chip_.35s_cubic-bezier(.2,.9,.3,1.2)_both] items-center gap-[0.6ch] rounded-[0.3em] border px-[0.7ch] py-[0.2em] align-middle text-[0.62em] leading-none"
-      style={{ color: c, borderColor: `color-mix(in srgb, ${c} 50%, transparent)`, background: `color-mix(in srgb, ${c} 16%, transparent)` }}
+      style={{ color: c, borderColor: mix(c, 55), background: mix(c, 14), textShadow: 'none' }}
     >
       <Icon name={TONE_ICON[tone]} tone="line" size="1em" />
       {text}
@@ -193,22 +307,64 @@ function Chip({ text, tone = 'error' }: { text: string; tone?: CodeReelTone }) {
   )
 }
 
+function Chrome({ kind, file, fn, skin }: { kind: CodeReelChrome; file: string; fn?: string; skin: Skin }) {
+  if (kind === 'none') return <div className="h-[0.6em]" />
+  if (kind === 'window')
+    return (
+      <div className="relative flex items-center border-b px-[1.2ch] py-[0.55em] text-[0.62em]" style={{ borderColor: skin.line, color: skin.mute, textShadow: 'none' }}>
+        <span className="flex gap-[0.7ch]">
+          {(['error', 'warn', 'ok'] as const).map((t) => (
+            <span key={t} className="size-[0.85em] rounded-full" style={{ background: mix(skin.tone[t], 85) }} />
+          ))}
+        </span>
+        <span className="absolute inset-x-0 text-center">{file}</span>
+      </div>
+    )
+  return (
+    <>
+      <div className="flex items-end gap-[1ch] border-b px-[1ch] pt-[0.6em] text-[0.68em]" style={{ borderColor: skin.line, background: mix(skin.fg, 4) }}>
+        <span className="flex items-center gap-[0.8ch] rounded-t-[0.3em] border border-b-0 px-[1.2ch] py-[0.55em]" style={{ borderColor: skin.line, background: skin.bg, color: skin.fg }}>
+          <span className="rounded-[0.2em] px-[0.4ch] text-[0.75em] leading-[1.2]" style={{ background: skin.ink.fn, color: skin.bg, textShadow: 'none' }}>
+            TS
+          </span>
+          {file}
+          <Icon name="close" tone="line" size="0.85em" style={{ color: skin.mute }} />
+        </span>
+      </div>
+      <div className="flex items-center gap-[0.8ch] px-[1.6ch] py-[0.5em] text-[0.62em]" style={{ color: skin.mute }}>
+        <span>src</span>
+        <Icon name="chevron-down" tone="line" size="0.9em" className="-rotate-90" />
+        <span>{file}</span>
+        {fn && (
+          <>
+            <Icon name="chevron-down" tone="line" size="0.9em" className="-rotate-90" />
+            <span style={{ color: skin.ink.fn }}>{fn}</span>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
 /* ───────────── Component ───────────── */
 
 /**
- * Code as kinetic typography. Lines of code type themselves into a dark editor while a 3D
- * camera rides the cursor: the screen tilts in perspective, the active line glows on a band
- * with a faint reflection, and the lines around it fall out of focus. Words can pause on an
- * autocomplete menu before they are accepted, finished lines can raise a wavy underline and an
- * inline diagnostic, and a terminal prints its logs at the end while the camera pulls back to the
- * whole file. Everything is a function of time, so it scrubs, loops, and follows a video or a
- * Timeline through `time`. Reduced motion shows each line whole, with a still camera.
+ * Code as kinetic typography. Lines of code type themselves into an editor while a 3D camera
+ * rides the cursor: the screen tilts in perspective, the active line sits on a band with a faint
+ * reflection, and the lines around it fall out of focus. Words can pause on an autocomplete menu
+ * before they are accepted, finished lines can raise a wavy underline and an inline diagnostic,
+ * and a terminal prints its logs at the end while the camera pulls back to the whole file. Four
+ * skins (neon, paper, phosphor, ink), three frames, optional synthesized sound. Everything is a
+ * function of time, so it scrubs, loops, and follows a video, a song or a Timeline through `time`.
+ * Reduced motion shows each line whole, with a still camera.
  */
 export function CodeReel({
   lines,
   file = 'scene.ts',
   terminal,
   command,
+  skin: skinName = 'neon',
+  chrome = 'editor',
   speed = 16,
   hold = 0.45,
   time,
@@ -218,11 +374,13 @@ export function CodeReel({
   camera = 'follow',
   zoom = 1,
   depth = 0.6,
-  glow = true,
-  lcd = true,
+  glow,
+  texture = true,
+  sound = false,
   label,
   className,
 }: CodeReelProps) {
+  const skin = SKINS[skinName]
   const [reduced] = useState(() => prefersReducedMotion())
   const { plans, end } = useMemo(() => plan(lines, speed, hold, reduced), [lines, speed, hold, reduced])
   const logs = useMemo(() => (terminal ?? []).map((l) => (typeof l === 'string' ? { text: l } : l)), [terminal])
@@ -242,9 +400,13 @@ export function CodeReel({
   const ap = plans[active]
   const lt = t - (ap?.start ?? 0)
   const typing = started && !!ap && lt < ap.dur
-  const menuOpen = !!ap?.menu && lt >= ap.menu[0] && lt < ap.menu[1]
+  const menuOpen = started && !!ap?.menu && lt >= ap.menu[0] && lt < ap.menu[1]
   const showTerm = logs.length > 0 && t >= termAt
   const overview = camera === 'static' || reduced || showTerm
+  const shown = started ? active + 1 : 0
+  const typedActive = started && ap ? Math.floor(Math.min(lines[active]?.code.length ?? 0, ap.typed(lt))) : 0
+  const diagsShown = lines.slice(0, shown).filter((l, i) => l.diagnostic && t - plans[i].start >= plans[i].dur + 0.15)
+  const logsShown = showTerm ? logs.filter((_, k) => t >= termAt + 0.6 + k * 0.45).length : 0
 
   // the camera: a damped follow written straight to the DOM, outside React
   const stage = useRef<HTMLDivElement>(null)
@@ -254,6 +416,26 @@ export function CodeReel({
   const want = useRef({ overview, zoom, reduced })
   useEffect(() => {
     want.current = { overview, zoom, reduced }
+  })
+
+  // sound follows what changed since the last frame; jumps (seeking) stay silent
+  const heard = useRef({ active: -1, typed: 0, menu: false, diags: 0, logs: 0 })
+  const volume = sound === true ? 0.5 : typeof sound === 'number' ? sound : 0
+  useEffect(() => {
+    const h = heard.current
+    const next = { active, typed: typedActive, menu: menuOpen, diags: diagsShown.length, logs: logsShown }
+    if (volume > 0) {
+      const sameLine = active === h.active
+      const step = typedActive - h.typed
+      if (sameLine && step > 0 && step <= 3) playReelSound('key', volume)
+      if (sameLine && h.menu && !menuOpen && step > 0) playReelSound('accept', volume)
+      if (next.diags === h.diags + 1) playReelSound(diagsShown[diagsShown.length - 1]?.diagnostic?.tone ?? 'error', volume)
+      if (next.logs === h.logs + 1) {
+        const tone = logs[next.logs - 1]?.tone
+        playReelSound(tone === 'ok' || tone === 'error' || tone === 'warn' ? tone : 'tick', volume)
+      }
+    }
+    heard.current = next
   })
 
   useEffect(() => {
@@ -296,7 +478,7 @@ export function CodeReel({
         const c = cursor.current
         const p = c ? offsetIn(c) : offsetIn(code.current)
         const fontPx = parseFloat(getComputedStyle(pl).fontSize) || 22
-        const z = ((Math.min(W, H * 1.1) / 9.5) / fontPx) * z0
+        const z = (Math.min(W, H * 1.1) / 9.5 / fontPx) * z0
         Object.assign(target, {
           x: p.x,
           y: p.y + fontPx * 0.55,
@@ -343,10 +525,9 @@ export function CodeReel({
   }, [tl, time])
 
   const text = label ?? lines.map((l) => l.code.trim()).join('\n')
-  const shown = started ? active + 1 : 0
   const blurOf = (i: number) => (reduced || overview ? 0 : Math.min(6, Math.abs(i - active) * 1.5 * depth))
-  const activeSegs = segs[active] ?? []
-  const typedActive = Math.floor(Math.min(lines[active]?.code.length ?? 0, ap ? ap.typed(lt) : 0))
+  const glowOn = glow ?? skin.glow
+  const tex = texture ? TEXTURE[skin.texture] : null
 
   return (
     <div className="grid w-full gap-3">
@@ -354,42 +535,29 @@ export function CodeReel({
         ref={stage}
         role="img"
         aria-label={text}
-        className={cn('ui-r relative isolate aspect-video w-full overflow-hidden bg-[#05060b] [perspective:1100px] [perspective-origin:50%_47%]', className)}
-        style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)' }}
+        onPointerDown={volume > 0 ? unlockReelSound : undefined}
+        className={cn('ui-r relative isolate aspect-video w-full overflow-hidden [perspective:1100px] [perspective-origin:50%_47%]', className)}
+        style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)', background: skin.bg }}
       >
         <style>{'@keyframes cr-chip{from{opacity:0;transform:translateX(-0.6em) scale(.9)}to{opacity:1;transform:none}}@keyframes cr-in{from{opacity:0;transform:translateY(.4em)}to{opacity:1;transform:none}}'}</style>
         <div
           ref={plane}
           aria-hidden="true"
-          className="absolute top-0 left-0 w-max min-w-[46em] origin-top-left text-[22px] leading-none text-[#a9b1d6] will-change-transform [transform-style:preserve-3d]"
-          style={glow ? { textShadow: '0 0 0.32em color-mix(in srgb, currentColor 55%, transparent), 0 0 0.08em currentColor' } : undefined}
+          className="absolute top-0 left-0 w-max min-w-[46em] origin-top-left text-[22px] leading-none will-change-transform [transform-style:preserve-3d]"
+          style={{
+            color: skin.fg,
+            background: skin.bg,
+            textShadow: glowOn ? '0 0 0.32em color-mix(in srgb, currentColor 55%, transparent), 0 0 0.08em currentColor' : undefined,
+          }}
         >
-          {/* chrome: tab and breadcrumb */}
-          <div className="flex items-end gap-[1ch] border-b border-white/10 bg-white/[0.03] px-[1ch] pt-[0.6em] text-[0.68em]">
-            <span className="flex items-center gap-[0.8ch] rounded-t-[0.3em] border border-b-0 border-white/10 bg-[#05060b] px-[1.2ch] py-[0.55em] text-[#d6dcff]">
-              <span className="rounded-[0.2em] bg-[#3178c6]/80 px-[0.4ch] text-[0.75em] leading-[1.2] text-white">TS</span>
-              {file}
-              <Icon name="close" tone="line" size="0.85em" className="text-white/35" />
-            </span>
-          </div>
-          <div className="flex items-center gap-[0.8ch] px-[1.6ch] py-[0.5em] text-[0.62em] text-white/40">
-            <span>src</span>
-            <Icon name="chevron-down" tone="line" size="0.9em" className="-rotate-90" />
-            <span>{file}</span>
-            {fn && (
-              <>
-                <Icon name="chevron-down" tone="line" size="0.9em" className="-rotate-90" />
-                <span style={{ color: INK.fn }}>{fn}</span>
-              </>
-            )}
-          </div>
+          <Chrome kind={chrome} file={file} fn={fn} skin={skin} />
 
           {/* the code */}
           <div ref={code} className="relative px-[1ch] pt-[0.6em] pb-[1.2em]">
             {started && (
               <div
-                className="absolute inset-x-0 border-y border-white/[0.07] bg-white/[0.045] transition-[top] duration-300 ease-out"
-                style={{ top: `calc(0.6em + ${active * LINE_H}em)`, height: `${LINE_H}em` }}
+                className="absolute inset-x-0 border-y transition-[top] duration-300 ease-out"
+                style={{ top: `calc(0.6em + ${active * LINE_H}em)`, height: `${LINE_H}em`, background: skin.band, borderColor: skin.bandEdge }}
               />
             )}
             {started && !overview && (
@@ -398,7 +566,7 @@ export function CodeReel({
                 style={{ top: `calc(0.6em + ${(active + 1) * LINE_H}em)`, height: `${LINE_H}em`, transform: 'scaleY(-1)' }}
               >
                 <span className="w-[4ch] shrink-0" />
-                <Code segs={activeSegs} n={typedActive} showSq={false} tone="" />
+                <Code segs={segs[active] ?? []} n={typedActive} showSq={false} tone="" skin={skin} />
               </div>
             )}
             {lines.slice(0, shown).map((line, i) => {
@@ -407,7 +575,6 @@ export function CodeReel({
               const n = Math.floor(Math.min(line.code.length, p.typed(local)))
               const done = local >= p.dur + 0.15
               const d = line.diagnostic
-              const tone = TONE[d?.tone ?? 'error']
               const b = blurOf(i)
               return (
                 <div
@@ -415,21 +582,29 @@ export function CodeReel({
                   className="relative flex items-center whitespace-pre transition-[filter,opacity] duration-500"
                   style={{ height: `${LINE_H}em`, filter: b ? `blur(${b}px)` : undefined, opacity: overview ? 1 : Math.max(0.35, 1 - Math.abs(i - active) * 0.12 * depth) }}
                 >
-                  <span className={cn('w-[4ch] shrink-0 pr-[1.4ch] text-right text-[0.7em]', i === active ? 'text-white/55' : 'text-white/20')} style={{ textShadow: 'none' }}>
+                  <span className="w-[4ch] shrink-0 pr-[1.4ch] text-right text-[0.7em]" style={{ color: skin.mute, opacity: i === active ? 1 : 0.5, textShadow: 'none' }}>
                     {i + 1}
                   </span>
                   <span className="relative">
-                    <Code segs={segs[i]} n={n} showSq={done} tone={tone} />
+                    <Code segs={segs[i]} n={n} showSq={done} tone={skin.tone[d?.tone ?? 'error']} skin={skin} />
                     {i === active && (
                       <span ref={cursor} className="relative inline-block h-[1.15em] w-0 align-[-0.2em]">
                         <span
-                          className={cn('absolute top-0 left-[0.05em] h-full w-[0.14em] rounded-[0.05em] bg-[#d9e6ff] shadow-[0_0_0.5em_#9cc0ff]', !typing && !reduced && 'animate-blink')}
+                          className={cn('absolute top-0 left-[0.05em] h-full rounded-[0.05em]', skinName === 'phosphor' ? 'w-[0.55em] opacity-70' : 'w-[0.14em]', !typing && !reduced && 'animate-blink')}
+                          style={{ background: skin.cursor, boxShadow: glowOn ? `0 0 0.5em ${skin.cursor}` : undefined }}
                         />
                         {menuOpen && line.suggest && (
-                          <span className="absolute top-[1.45em] left-[-0.6ch] z-10 grid min-w-[16ch] animate-[cr-in_.18s_ease-out_both] gap-[0.1em] rounded-[0.3em] border border-white/12 bg-[#0d1020]/95 p-[0.25em] text-[0.6em] shadow-[0_0.6em_1.6em_rgb(0_0_0/0.5)]" style={{ textShadow: 'none' }}>
+                          <span
+                            className="absolute top-[1.45em] left-[-0.6ch] z-10 grid min-w-[16ch] animate-[cr-in_.18s_ease-out_both] gap-[0.1em] rounded-[0.3em] border p-[0.25em] text-[0.6em] shadow-[0_0.6em_1.6em_rgb(0_0_0/0.35)]"
+                            style={{ textShadow: 'none', background: skin.menu.bg, color: skin.menu.fg, borderColor: skin.line }}
+                          >
                             {[line.suggest.word, ...(line.suggest.options ?? []).filter((o) => o !== line.suggest?.word)].slice(0, 4).map((o, k) => (
-                              <span key={o} className={cn('flex items-center gap-[1ch] rounded-[0.2em] px-[0.8ch] py-[0.35em]', k === 0 ? 'bg-[#2a4ea8]/70 text-white' : 'text-white/60')}>
-                                <span className="grid size-[1.2em] place-items-center rounded-[0.2em] border border-current/40 text-[0.75em]" style={{ color: INK.fn }}>
+                              <span
+                                key={o}
+                                className="flex items-center gap-[1ch] rounded-[0.2em] px-[0.8ch] py-[0.35em]"
+                                style={k === 0 ? { background: skin.menu.sel, color: skin.menu.selFg } : undefined}
+                              >
+                                <span className="grid size-[1.2em] place-items-center rounded-[0.2em] border text-[0.75em]" style={{ color: k === 0 ? 'inherit' : skin.ink.fn, borderColor: 'currentColor' }}>
                                   f
                                 </span>
                                 {o}
@@ -440,7 +615,7 @@ export function CodeReel({
                       </span>
                     )}
                   </span>
-                  {d && done && <Chip text={d.text} tone={d.tone} />}
+                  {d && done && <Chip text={d.text} tone={d.tone} skin={skin} />}
                 </div>
               )
             })}
@@ -448,48 +623,36 @@ export function CodeReel({
 
           {/* the terminal */}
           {logs.length > 0 && (
-            <div className={cn('border-t border-white/10 px-[1.6ch] pt-[0.5em] pb-[1em] text-[0.62em] transition-opacity duration-500', showTerm ? 'opacity-100' : 'opacity-0')}>
-              <div className="mb-[0.7em] flex gap-[2.4ch] text-[0.85em] tracking-[0.08em] text-white/35">
+            <div className={cn('border-t px-[1.6ch] pt-[0.5em] pb-[1em] text-[0.62em] transition-opacity duration-500', showTerm ? 'opacity-100' : 'opacity-0')} style={{ borderColor: skin.line }}>
+              <div className="mb-[0.7em] flex gap-[2.4ch] text-[0.85em] tracking-[0.08em]" style={{ color: skin.mute }}>
                 <span>PROBLEMS</span>
                 <span>OUTPUT</span>
-                <span className="border-b border-current text-white/80">TERMINAL</span>
+                <span className="border-b border-current" style={{ color: skin.fg }}>
+                  TERMINAL
+                </span>
               </div>
               {showTerm && (
                 <div className="grid gap-[0.45em]">
-                  <span className="text-white/70">
-                    <span style={{ color: TONE.ok }}>~/{fn ?? 'reel'}</span> $ {command ?? `run ${file}`}
+                  <span>
+                    <span style={{ color: skin.tone.ok }}>~/{fn ?? 'reel'}</span> $ {command ?? `run ${file}`}
                   </span>
-                  {logs.map((l, k) =>
-                    t >= termAt + 0.6 + k * 0.45 ? (
-                      <span key={k} className="animate-[cr-in_.25s_ease-out_both] text-white/75">
-                        <span className="inline-block w-[6ch]" style={{ color: TONE[l.tone ?? 'info'] }}>
-                          {l.tone ?? 'info'}
-                        </span>
-                        {l.text}
+                  {logs.slice(0, logsShown).map((l, k) => (
+                    <span key={k} className="animate-[cr-in_.25s_ease-out_both]">
+                      <span className="inline-block w-[6ch]" style={{ color: skin.tone[l.tone ?? 'info'] }}>
+                        {l.tone ?? 'info'}
                       </span>
-                    ) : null,
-                  )}
+                      {l.text}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
           )}
 
-          {lcd && (
-            <div
-              className="pointer-events-none absolute inset-0 opacity-60 mix-blend-multiply"
-              style={{
-                backgroundImage:
-                  'repeating-linear-gradient(0deg, rgb(0 0 0/.55) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgb(0 0 0/.45) 0 1px, transparent 1px 3px)',
-              }}
-            />
-          )}
+          {tex && <div className="pointer-events-none absolute inset-0" style={tex} />}
         </div>
-        {/* lens: vignette and a soft bloom from the middle */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{ background: 'radial-gradient(120% 90% at 50% 47%, transparent 45%, rgb(0 0 0/.78) 100%)' }}
-        />
+        {/* lens: vignette */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(120% 90% at 50% 47%, transparent 45%, ${skin.vignette} 100%)` }} />
       </div>
       {controls && time === undefined && <TimelineScrubber timeline={tl} label="Code reel" />}
     </div>

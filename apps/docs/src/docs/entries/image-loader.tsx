@@ -76,6 +76,105 @@ function KindsDemo() {
   )
 }
 
+/** Reads an image in the browser and builds its placeholder: a 32 px alpha mask for cut-outs, a 16 px preview otherwise. */
+function makePlaceholder(img: HTMLImageElement) {
+  const w = img.naturalWidth
+  const h = img.naturalHeight
+  const probe = Object.assign(document.createElement('canvas'), { width: 64, height: Math.max(1, Math.round((64 * h) / w)) })
+  const pc = probe.getContext('2d', { willReadFrequently: true })
+  if (!pc) return null
+  pc.drawImage(img, 0, 0, probe.width, probe.height)
+  const px = pc.getImageData(0, 0, probe.width, probe.height).data
+  let cutout = false
+  for (let i = 3; i < px.length; i += 4) if (px[i] < 250) cutout = true
+  const side = cutout ? 32 : 16
+  const k = side / Math.max(w, h)
+  const c = Object.assign(document.createElement('canvas'), { width: Math.max(1, Math.round(w * k)), height: Math.max(1, Math.round(h * k)) })
+  const ctx = c.getContext('2d')
+  if (!ctx) return null
+  ctx.drawImage(img, 0, 0, c.width, c.height)
+  if (cutout) {
+    // keep only the alpha: black pixels carrying the image's coverage
+    ctx.globalCompositeOperation = 'source-in'
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, c.width, c.height)
+  }
+  return { uri: c.toDataURL('image/png'), kind: cutout ? ('shape' as const) : ('blur' as const), width: w, height: h }
+}
+
+const PICKS: ArtName[] = ['mascot/koma-wink', 'mascot/koma-side', 'hero/koma-impact', 'og-image']
+
+function PlaceholderMaker() {
+  const [src, setSrc] = useState(ART['mascot/koma-wink'].src)
+  const [made, setMade] = useState<ReturnType<typeof makePlaceholder>>(null)
+  const [round, setRound] = useState(0)
+  const [arrived, setArrived] = useState(-1)
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      setMade(makePlaceholder(img))
+      setRound((r) => r + 1)
+    }
+    img.src = src
+  }, [src])
+  useEffect(() => {
+    const t = window.setTimeout(() => setArrived(round), 1500)
+    return () => window.clearTimeout(t)
+  }, [round])
+  const bytes = made ? Math.round((made.uri.length - 22) * 0.75) : 0
+  return (
+    <div className="grid w-full max-w-[560px] gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {PICKS.map((p) => (
+          <Button key={p} size="sm" variant={ART[p].src === src ? 'accent' : 'paper'} sfx={false} onClick={() => setSrc(ART[p].src)}>
+            {p.split('/').pop()}
+          </Button>
+        ))}
+        <label className="ui-head ui-pill ui-border-thin inline-flex cursor-pointer items-center gap-1.5 bg-paper px-3 py-1.5 text-[13px] focus-within:ui-focus">
+          <Icon name="plus" tone="line" size={14} /> Your image
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) setSrc(URL.createObjectURL(f))
+            }}
+          />
+        </label>
+      </div>
+      {made && (
+        <div className="grid grid-cols-2 items-end gap-4">
+          <figure className="m-0 grid gap-2 text-center">
+            <ImageLoader width={made.width} height={made.height} placeholder={made.uri} placeholderKind={made.kind} fit={made.kind === 'blur' ? 'cover' : 'contain'} alt="" className="ui-r overflow-hidden" />
+            <figcaption className="text-xs font-bold text-mute">
+              placeholder: {made.kind}, {bytes} bytes
+            </figcaption>
+          </figure>
+          <figure className="m-0 grid gap-2 text-center">
+            <ImageLoader
+              key={round}
+              width={made.width}
+              height={made.height}
+              placeholder={made.uri}
+              placeholderKind={made.kind}
+              fit={made.kind === 'blur' ? 'cover' : 'contain'}
+              src={arrived === round ? src : undefined}
+              alt="The chosen image"
+              reveal="ink"
+              className="ui-r overflow-hidden"
+            />
+            <figcaption className="text-xs font-bold text-mute">loading it (1.5 s)</figcaption>
+          </figure>
+        </div>
+      )}
+      <Button size="sm" sfx={false} className="justify-self-center" onClick={() => setRound((r) => r + 1)} icon={<Icon name="play" tone="line" size={14} />}>
+        Load again
+      </Button>
+    </div>
+  )
+}
+
 export default {
   slug: 'image-loader',
   name: 'Image Loader',
@@ -107,12 +206,7 @@ export default {
     },
     {
       title: 'Making the placeholders',
-      preview: (
-        <p className="m-0 max-w-[60ch] text-center text-sm leading-relaxed text-mute">
-          The docs generate every placeholder at build time: <code className="font-mono text-ink">python3 scripts/art-placeholders.py</code> reads each
-          image and writes its size plus a ~1 KB data URI to <code className="font-mono text-ink">data/art.ts</code>.
-        </p>
-      ),
+      preview: <PlaceholderMaker />,
       code: `# a 32 px alpha mask for cut-out art (Pillow)
 im = Image.open(path).convert('RGBA')
 mask = Image.new('RGBA', small, (0, 0, 0, 0))

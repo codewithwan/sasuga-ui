@@ -6,7 +6,35 @@ import { FxScreen } from '@/components/ui/fx-screen'
 import type { FxScreenHandle } from '@/components/ui/fx-screen'
 import { Icon } from '@/components/ui/icon'
 import { Mascot } from '@/components/art/mascot'
+import { withBase } from '@/data/site'
+import { useTheme } from '@/lib/theme'
+import { EMBED_DEFAULTS, embedQuery } from '@/pages/embed/params'
 import type { DocEntry } from '../types'
+
+/** The real /embed/fx page in an iframe, in the current look. It waits for a click inside it. */
+function EmbedPreview() {
+  const { style, theme, mode } = useTheme()
+  const query = embedQuery({ ...EMBED_DEFAULTS, effect: 'focus-lines', trigger: 'click', text: 'ドン', background: 'paper', intensity: 0.85 }, { style, theme, mode })
+  return (
+    <div className="grid w-full max-w-[560px] gap-2.5">
+      <iframe
+        key={query}
+        src={`${withBase('/embed/fx/')}?${query}`}
+        title="Animated FX screen embed"
+        sandbox="allow-scripts allow-same-origin"
+        loading="lazy"
+        className="ui-card aspect-video w-full overflow-hidden border-0 bg-paper"
+      />
+      <p className="m-0 text-center text-xs text-mute">
+        A live iframe of <code className="font-mono text-accent">/embed/fx</code>: click inside it to hit. Build your own in the{' '}
+        <Link to="/docs/embed" className="font-bold text-accent">
+          Embed guide
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
 
 /** A 16:9 stage that stays still until Play is pressed. */
 function Stage(props: Omit<ComponentProps<typeof FxScreen>, 'play'>) {
@@ -101,15 +129,7 @@ export default {
     },
     {
       title: 'As an embed (iframe, OBS, Notion)',
-      preview: (
-        <p className="m-0 max-w-[48ch] text-center text-sm text-mute">
-          The same screen lives at <code className="font-mono text-accent">/embed/fx</code>, configured from its URL. Build one in the{' '}
-          <Link to="/docs/embed" className="font-bold text-accent">
-            Embed guide
-          </Link>
-          .
-        </p>
-      ),
+      preview: <EmbedPreview />,
       code: `<iframe src="https://…/embed/fx/?effect=impact&amp;text=%E3%83%89%E3%83%B3&amp;background=transparent"
   title="Animated FX screen" style="width:100%;aspect-ratio:16/9;border:0;color-scheme:normal"
   sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>`,
